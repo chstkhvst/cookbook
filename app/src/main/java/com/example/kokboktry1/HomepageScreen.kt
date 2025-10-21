@@ -81,8 +81,8 @@ fun HomepageScreen(
             OutlinedTextField(
                 value = "",
                 onValueChange = {},
-                placeholder = { Text("поиск по названию") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Поиск") },
+                placeholder = { Text("поиск по названию", color = Color(0xFFFF0090)) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Поиск", tint = Color(0xFFFF0090)) },
                 modifier = Modifier
                     .fillMaxWidth(),
                     colors = TextFieldDefaults.colors(
@@ -133,47 +133,45 @@ fun HomepageScreen(
                     .background(Color(0xFFFFDFEC), RoundedCornerShape(20.dp))
                     .padding(12.dp)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(100.dp, 70.dp)
-                            .background(Color.LightGray, RoundedCornerShape(10.dp))
-                    ) {
-                        Text(
-                            text = "Фото",
-                            modifier = Modifier.align(Alignment.Center),
-                            color = Color.DarkGray
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Эклеры",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFF0090),
-                            fontFamily = FontFamily(Font(R.font.montserrat))
-                        )
-                        Text("Категория: десерт", color = Color(0xFFFF0090))
-                        Text("Сложность: 5★", color = Color(0xFFFF0090))
-                        Text("Кухня: французская", color = Color(0xFFFF0090))
-                        Text("Количество порций: 10", color = Color(0xFFFF0090))
-                        Text("Время приготовления: 2 часа", color = Color(0xFFFF0090))
-                    }
-
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        IconButton(onClick = onToggleFavorite) {
-                            Icon(
-                                imageVector = Icons.Default.Favorite,
-                                contentDescription = "Избранное",
-                                tint = Color(0xFFFF0090)
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(100.dp, 70.dp)
+                                .background(Color.LightGray, RoundedCornerShape(10.dp))
+                        ) {
+                            Text(
+                                text = "Фото",
+                                modifier = Modifier.align(Alignment.Center),
+                                color = Color.DarkGray
                             )
                         }
+
+                        Spacer(modifier = Modifier.width(10.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Эклеры",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFFF0090),
+                                fontFamily = FontFamily(Font(R.font.montserrat))
+                            )
+                            Text("Категория: десерт", color = Color(0xFFFF0090))
+                            Text("Сложность: 5★", color = Color(0xFFFF0090))
+                            Text("Кухня: французская", color = Color(0xFFFF0090))
+                            Text("Количество порций: 10", color = Color(0xFFFF0090))
+                            Text("Время приготовления: 2 часа", color = Color(0xFFFF0090))
+                        }
+
+                }
+
+                    Row(
+                        horizontalArrangement = Arrangement.End,
+                        modifier = Modifier.fillMaxWidth()
+//                        horizontalAlignment = Alignment.CenterHorizontally,
+//                        verticalArrangement = Arrangement.SpaceBetween,
+                    ) {
                         Button(
                             onClick = onRecipeDetails,
                             shape = RoundedCornerShape(20.dp),
@@ -185,6 +183,13 @@ fun HomepageScreen(
                                 fontFamily = FontFamily(Font(R.font.montserrat)),
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 12.sp
+                            )
+                        }
+                        IconButton(onClick = onToggleFavorite) {
+                            Icon(
+                                imageVector = Icons.Default.Favorite,
+                                contentDescription = "Избранное",
+                                tint = Color(0xFFFF0090)
                             )
                         }
                     }

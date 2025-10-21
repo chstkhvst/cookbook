@@ -37,28 +37,38 @@ class MainActivity : ComponentActivity() {
                     when (currentScreen) {
                         "login" -> LoginScreen(
                             onLoginSuccess = {
-                                // Переход на главный экран
-                                //Kokboktry1App()
-                                currentScreen = "profile"
+                                currentScreen = "home"
+                                //currentScreen = "details"
                             },
                             onNavigateToRegister = {
-                                currentScreen = "register" // Переход к регистрации
+                                currentScreen = "register"
                             }
                         )
                         "register" -> RegisterScreen(
                             onRegisterSuccess = {
-                                // Переход на главный экран
-                                currentScreen = "profile"
+                                currentScreen = "home"
                             },
                             onNavigateToLogin = {
-                                currentScreen = "login" // Переход ко входу
+                                currentScreen = "login"
                             }
                         )
                         "profile" -> ProfileScreen(
                             onNavigateHome = { currentScreen = "home" },
+                            onNavigateFavorites = {currentScreen = "favorites"}
                         )
                         "home" -> HomepageScreen(
-                            onNavigateProfile = {currentScreen = "profile"}
+                            onNavigateProfile = {currentScreen = "profile"},
+                            onNavigateFavorites = {currentScreen = "favorites"}
+                        )
+                        "favorites" -> FavoritesScreen(
+                            onNavigateProfile = {currentScreen = "profile"},
+                            onNavigateHome = { currentScreen = "home" },
+                        )
+                        "form" -> AddRecipeForm(
+
+                        )
+                        "details" -> RecipeDetailsScreen (
+
                         )
                     }
                 }
