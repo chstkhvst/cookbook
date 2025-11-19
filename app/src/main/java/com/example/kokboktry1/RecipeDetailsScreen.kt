@@ -41,20 +41,25 @@ fun RecipeDetailsScreen(
 ) {
     var servings by remember { mutableStateOf(servingsInitial) }
 
+    val Pink = Color(0xFFFF9FBA)
+    val WhitePink = Color(0xFFFFDFEC)
+    val BrightPink = Color(0xFFFF0090)
+    val LightPink = Color(0xFFFFC7DD)
+
     Scaffold(
         bottomBar = {
-            BottomAppBar(containerColor = Color(0xFFFF9FBA)) {
+            BottomAppBar(containerColor = Pink) {
                 IconButton(onClick = onNavigateHome, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Default.Home, contentDescription = "Главная", tint = Color(0xFFFF0090))
+                    Icon(Icons.Default.Home, contentDescription = "Главная", tint = BrightPink)
                 }
                 IconButton(onClick = onNavigateSearch, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Default.Search, contentDescription = "Поиск", tint = Color(0xFFFF0090))
+                    Icon(Icons.Default.Search, contentDescription = "Поиск", tint = BrightPink)
                 }
                 IconButton(onClick = onNavigateFavorites, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Default.Favorite, contentDescription = "Избранное", tint = Color(0xFFFF0090))
+                    Icon(Icons.Default.Favorite, contentDescription = "Избранное", tint = BrightPink)
                 }
                 IconButton(onClick = onNavigateProfile, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Default.Person, contentDescription = "Профиль", tint = Color(0xFFFF0090))
+                    Icon(Icons.Default.Person, contentDescription = "Профиль", tint = BrightPink)
                 }
             }
         }
@@ -66,7 +71,7 @@ fun RecipeDetailsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(Color(0xFFFFC7DD))
+                .background(LightPink)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -77,7 +82,7 @@ fun RecipeDetailsScreen(
                 fontFamily = abril,
                 fontWeight = FontWeight.Bold,
                 fontSize = 40.sp,
-                color = Color(0xFFFF0090)
+                color = BrightPink
             )
 
             Spacer(Modifier.height(8.dp))
@@ -88,7 +93,7 @@ fun RecipeDetailsScreen(
                 fontFamily = montserrat,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 26.sp,
-                color = Color(0xFFFF0090)
+                color = BrightPink
             )
 
             Spacer(Modifier.height(16.dp))
@@ -99,7 +104,7 @@ fun RecipeDetailsScreen(
                     .fillMaxWidth()
                     .height(200.dp)
                     .clip(RoundedCornerShape(20.dp))
-                    .background(Color(0xFFFF9FBA)),
+                    .background(Pink),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
@@ -118,14 +123,14 @@ fun RecipeDetailsScreen(
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Порции:", color = Color(0xFFFF0090), fontFamily = montserrat, fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
+                Text("Порции:", color =BrightPink, fontFamily = montserrat, fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
                 Spacer(Modifier.width(10.dp))
                 IconButton(onClick = { if (servings > 1) servings-- }) {
-                    Text("-", fontSize = 28.sp, color = Color(0xFFFF0090), fontWeight = FontWeight.SemiBold)
+                    Text("-", fontSize = 28.sp, color =BrightPink, fontWeight = FontWeight.SemiBold)
                 }
-                Text("$servings", fontSize = 18.sp, color = Color(0xFFFF0090), fontFamily = montserrat, fontWeight = FontWeight.SemiBold)
+                Text("$servings", fontSize = 18.sp, color = BrightPink, fontFamily = montserrat, fontWeight = FontWeight.SemiBold)
                 IconButton(onClick = { servings++ }) {
-                    Text("+", fontSize = 28.sp, color = Color(0xFFFF0090))
+                    Text("+", fontSize = 28.sp, color =BrightPink)
                 }
             }
 
@@ -135,13 +140,13 @@ fun RecipeDetailsScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFFFFDFEC), RoundedCornerShape(20.dp))
+                    .background(WhitePink, RoundedCornerShape(20.dp))
                     .padding(16.dp)
             ) {
                 Column {
                     Text(
                         "Ингредиенты",
-                        color = Color(0xFFFF0090),
+                        color = BrightPink,
                         fontFamily = montserrat,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 22.sp
@@ -150,7 +155,7 @@ fun RecipeDetailsScreen(
                     ingredients.forEach { ingredient ->
                         Text(
                             "• $ingredient",
-                            color = Color(0xFFFF0090),
+                            color = BrightPink,
                             fontFamily = montserrat,
                             fontSize = 16.sp
                         )
@@ -164,13 +169,13 @@ fun RecipeDetailsScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFFFFDFEC), RoundedCornerShape(20.dp))
+                    .background(WhitePink, RoundedCornerShape(20.dp))
                     .padding(16.dp)
             ) {
                 Column {
                     Text(
                         "Пошаговый рецепт",
-                        color = Color(0xFFFF0090),
+                        color = BrightPink,
                         fontFamily = montserrat,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 22.sp
@@ -181,7 +186,7 @@ fun RecipeDetailsScreen(
                         Column {
                             Text(
                                 "${index + 1}. $step",
-                                color = Color(0xFFFF0090),
+                                color = BrightPink,
                                 fontFamily = montserrat,
                                 fontSize = 16.sp
                             )

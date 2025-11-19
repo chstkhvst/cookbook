@@ -19,29 +19,34 @@ import com.example.kokboktry1.ui.theme.Kokboktry1Theme
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit = {},          // Колбэк при успешном входе
-    onNavigateToRegister: () -> Unit = {}     // Колбэк для перехода к регистрации
+    onLoginSuccess: () -> Unit = {},          //Колбэк при успешном входе
+    onNavigateToRegister: () -> Unit = {}     //Колбэк для перехода к регистрации
 ) {
+    val Pink = Color(0xFFFF9FBA)
+    val WhitePink = Color(0xFFFFDFEC)
+    val BrightPink = Color(0xFFFF0090)
+    val LightPink = Color(0xFFFFC7DD)
+
     // Состояния для текстовых полей
     var login by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    // Основной layout
+
     Column(
         modifier = Modifier
-            .background(Color(0xFFFFC7DD))
+            .background(LightPink)
             .fillMaxSize()
             .padding(32.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Заголовок
+
         Text(
             text = "cookbook",
             fontSize = 64.sp,
             fontWeight = FontWeight.Normal,
             fontFamily = FontFamily(Font(R.font.abrilfatface)),
-            color = Color(0xFFFF0090),
+            color = BrightPink,
         )
         Spacer(modifier = Modifier.height(3.dp))
 
@@ -50,7 +55,7 @@ fun LoginScreen(
             fontSize = 20.sp,
             fontWeight = FontWeight.SemiBold,
             fontFamily = FontFamily(Font(R.font.montserrat)),
-            color = Color(0xFFFF0090),
+            color = BrightPink,
         )
         Spacer(modifier = Modifier.height(10.dp))
 
@@ -66,12 +71,12 @@ fun LoginScreen(
             },
             modifier = Modifier.fillMaxWidth(),
             colors = TextFieldDefaults.colors(
-                unfocusedContainerColor = Color(0xFFFF9FBA),
-                focusedContainerColor = Color(0xFFFF9FBA),
-                unfocusedTextColor = Color(0xFFFF0090),
-                focusedTextColor = Color(0xFFFF0090),
-                unfocusedLabelColor = Color(0xFFFF0090),
-                focusedLabelColor = Color(0xFFFF0090),
+                unfocusedContainerColor = Pink,
+                focusedContainerColor = Pink,
+                unfocusedTextColor = BrightPink,
+                focusedTextColor =BrightPink,
+                unfocusedLabelColor = BrightPink,
+                focusedLabelColor = BrightPink,
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent
             ),
@@ -92,12 +97,12 @@ fun LoginScreen(
             visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
             colors = TextFieldDefaults.colors(
-                unfocusedContainerColor = Color(0xFFFF9FBA),
-                focusedContainerColor = Color(0xFFFF9FBA),
-                unfocusedTextColor = Color(0xFFFF0090),
-                focusedTextColor = Color(0xFFFF0090),
-                unfocusedLabelColor = Color(0xFFFF0090),
-                focusedLabelColor = Color(0xFFFF0090),
+                unfocusedContainerColor = Pink,
+                focusedContainerColor = Pink,
+                unfocusedTextColor =BrightPink,
+                focusedTextColor = BrightPink,
+                unfocusedLabelColor = BrightPink,
+                focusedLabelColor = BrightPink,
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent
             ),
@@ -113,12 +118,12 @@ fun LoginScreen(
             },
             modifier = Modifier.width(280.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFFF0090)
+                containerColor = BrightPink
             )
         ) {
             Text(
                 "Войти",
-                color = Color(0xFFFF9FBA),
+                color = Pink,
                 fontFamily = FontFamily(Font(R.font.montserrat)),
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
@@ -132,7 +137,7 @@ fun LoginScreen(
                 fontFamily = FontFamily(Font(R.font.montserrat)),
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp,
-                color = Color(0xFFFF0090),
+                color = BrightPink,
             )
         }
     }

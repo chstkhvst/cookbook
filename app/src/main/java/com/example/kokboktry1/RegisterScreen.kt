@@ -11,8 +11,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.kokboktry1.ui.theme.Kokboktry1Theme
 import androidx.compose.ui.graphics.Color
-
-
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -28,22 +26,26 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
     var repeatpassword by remember { mutableStateOf("") }
 
-    // Основной layout
+    val Pink = Color(0xFFFF9FBA)
+    val WhitePink = Color(0xFFFFDFEC)
+    val BrightPink = Color(0xFFFF0090)
+    val LightPink = Color(0xFFFFC7DD)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFC7DD))
+            .background(LightPink)
             .padding(32.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Заголовок
+
         Text(
             text = "cookbook",
             fontSize = 64.sp,
             fontWeight = FontWeight.Normal,
             fontFamily = FontFamily(Font(R.font.abrilfatface)),
-            color = Color(0xFFFF0090),
+            color = BrightPink,
         )
         Spacer(modifier = Modifier.height(3.dp))
 
@@ -52,7 +54,7 @@ fun RegisterScreen(
             fontSize = 20.sp,
             fontWeight = FontWeight.SemiBold,
             fontFamily = FontFamily(Font(R.font.montserrat)),
-            color = Color(0xFFFF0090),
+            color = BrightPink,
         )
         Spacer(modifier = Modifier.height(10.dp))
 
@@ -65,12 +67,12 @@ fun RegisterScreen(
                 ) },
             modifier = Modifier.fillMaxWidth(),
             colors = TextFieldDefaults.colors(
-                unfocusedContainerColor = Color(0xFFFF9FBA),
-                focusedContainerColor = Color(0xFFFF9FBA),
-                unfocusedTextColor = Color(0xFFFF0090),
-                focusedTextColor = Color(0xFFFF0090),
-                unfocusedLabelColor = Color(0xFFFF0090),
-                focusedLabelColor = Color(0xFFFF0090),
+                unfocusedContainerColor = Pink,
+                focusedContainerColor = Pink,
+                unfocusedTextColor = BrightPink,
+                focusedTextColor =BrightPink,
+                unfocusedLabelColor = BrightPink,
+                focusedLabelColor = BrightPink,
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent
             ),
@@ -89,12 +91,12 @@ fun RegisterScreen(
             visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(), // Точки вместо текста
             modifier = Modifier.fillMaxWidth(),
             colors = TextFieldDefaults.colors(
-                unfocusedContainerColor = Color(0xFFFF9FBA),
-                focusedContainerColor = Color(0xFFFF9FBA),
-                unfocusedTextColor = Color(0xFFFF0090),
-                focusedTextColor = Color(0xFFFF0090),
-                unfocusedLabelColor = Color(0xFFFF0090),
-                focusedLabelColor = Color(0xFFFF0090),
+                unfocusedContainerColor = Pink,
+                focusedContainerColor = Pink,
+                unfocusedTextColor = BrightPink,
+                focusedTextColor = BrightPink,
+                unfocusedLabelColor = BrightPink,
+                focusedLabelColor = BrightPink,
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent
             ),
@@ -113,12 +115,12 @@ fun RegisterScreen(
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(), // Точки вместо текста
             colors = TextFieldDefaults.colors(
-                unfocusedContainerColor = Color(0xFFFF9FBA),
-                focusedContainerColor = Color(0xFFFF9FBA),
-                unfocusedTextColor = Color(0xFFFF0090),
-                focusedTextColor = Color(0xFFFF0090),
-                unfocusedLabelColor = Color(0xFFFF0090),
-                focusedLabelColor = Color(0xFFFF0090),
+                unfocusedContainerColor = Pink,
+                focusedContainerColor = Pink,
+                unfocusedTextColor = BrightPink,
+                focusedTextColor = BrightPink,
+                unfocusedLabelColor = BrightPink,
+                focusedLabelColor = BrightPink,
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent
             ),
@@ -134,25 +136,25 @@ fun RegisterScreen(
             },
             modifier = Modifier.width(280.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFFF0090)
+                containerColor = BrightPink
             )
         ) {
             Text(
                 "Зарегистрироваться",
-                color = Color(0xFFFF9FBA),
+                color = Pink,
                 fontFamily = FontFamily(Font(R.font.montserrat)),
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
             )
         }
 
-        // КНОПКА ПЕРЕХОДА К РЕГИСТРАЦИИ
+        // переход к регситрации
         TextButton(onClick = onNavigateToLogin) {
             Text("Уже есть аккаунт? Войти",
                 fontFamily = FontFamily(Font(R.font.montserrat)),
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp,
-                color = Color(0xFFFF0090),
+                color = BrightPink,
                 )
         }
     }

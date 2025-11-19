@@ -54,7 +54,8 @@ class MainActivity : ComponentActivity() {
                         )
                         "profile" -> ProfileScreen(
                             onNavigateHome = { currentScreen = "home" },
-                            onNavigateFavorites = {currentScreen = "favorites"}
+                            onNavigateFavorites = {currentScreen = "favorites"},
+                            onAddClick = {currentScreen = "form"}
                         )
                         "home" -> HomepageScreen(
                             onNavigateProfile = {currentScreen = "profile"},
@@ -65,7 +66,7 @@ class MainActivity : ComponentActivity() {
                             onNavigateHome = { currentScreen = "home" },
                         )
                         "form" -> AddRecipeForm(
-
+                            onExitClick = {currentScreen = "profile"}
                         )
                         "details" -> RecipeDetailsScreen (
 
