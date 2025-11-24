@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("org.openapi.generator") version "6.6.0"
 }
 
 android {
@@ -39,6 +40,7 @@ android {
     buildFeatures {
         compose = true
     }
+    sourceSets["main"].java.srcDir("$buildDir/generated/openapi/src/main/kotlin")
 }
 
 dependencies {
@@ -59,4 +61,40 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.0")
+
+    // Retrofit2
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+// OkHttp3
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+// Gson
+    implementation("com.google.code.gson:gson:2.10.1")
+    // Scalars
+    implementation("com.squareup.retrofit2:converter-scalars:2.11.0")
+// Moshi
+    implementation("com.squareup.moshi:moshi:1.15.1")
+    implementation("com.squareup.retrofit2:converter-moshi:2.11.0")
+    implementation("com.squareup.moshi:moshi-kotlin:1.15.1")
+
+    implementation("io.coil-kt:coil-compose:2.4.0")
+
+
+
 }
+openApiGenerate {
+    generatorName.set("kotlin")
+    inputSpec.set("$rootDir/openapi/swagger.json")
+    outputDir.set("$buildDir/generated/openapi")
+
+    packageName.set("com.example.myapp.api")
+    apiPackage.set("com.example.myapp.api.endpoints")
+    modelPackage.set("com.example.myapp.api.models")
+
+    configOptions.set(
+        mapOf(
+            "library" to "jvm-retrofit2"
+        )
+    )
+}
+

@@ -25,9 +25,16 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import vm.HomepageViewModel
+import com.example.myapp.api.models.RecipeDTO
+import com.example.myapp.api.models.RecipeDifficulty
+import com.example.myapp.api.models.RecipeType
+import com.example.myapp.api.models.RecipeCuisine
 
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -117,12 +124,22 @@ fun HomepageScreen(
             // Комбобоксы
             HorizontalScrollableRow(
                 modifier = Modifier.fillMaxWidth()
-
             ) {
-                ComboBoxPlaceholder("категория")
-                ComboBoxPlaceholder("сложность")
-                ComboBoxPlaceholder("кухня")
-
+                RecipeTypeComboBox(
+                    types = state.recipeTypes,
+                    selectedType = state.selectedType,
+                    onTypeSelected = { viewModel.filterByType(it) }
+                )
+                RecipeDifficultyComboBox(
+                    difficulties = state.difficulties,
+                    selectedDifficulty = state.selectedDifficulty,
+                    onDifficultySelected = { viewModel.filterByDifficulty(it) }
+                )
+                RecipeCuisineComboBox(
+                    cuisines = state.cuisines,
+                    selectedCuisine = state.selectedCuisine,
+                    onCuisineSelected = { viewModel.filterByCuisine(it) }
+                )
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -153,41 +170,56 @@ fun HomepageScreen(
                 ) {
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(100.dp, 70.dp)
-                                    .background(Color.LightGray, RoundedCornerShape(10.dp))
-                            ) {
-                                Text(
-                                    text = "Фото",
-                                    modifier = Modifier.align(Alignment.Center),
-                                    color = Color.DarkGray
+                            val imageUrl = recipe.mainImagePath
+                            if (!imageUrl.isNullOrEmpty()) {
+                                // Используем Coil для загрузки изображения
+                                AsyncImage(
+                                    model = imageUrl,
+                                    contentDescription = "Фото рецепта",
+                                    modifier = Modifier
+                                        .size(100.dp, 70.dp)
+                                        .clip(RoundedCornerShape(10.dp)),
+                                    contentScale = ContentScale.Crop
                                 )
+                            } else {
+                                // Плейсхолдер если изображения нет
+                                Box(
+                                    modifier = Modifier
+                                        .size(100.dp, 70.dp)
+                                        .background(Color.LightGray, RoundedCornerShape(10.dp))
+                                ) {
+                                    Text(
+                                        text = "Нет фото",
+                                        modifier = Modifier.align(Alignment.Center),
+                                        color = Color.DarkGray
+                                    )
+                                }
                             }
 
                             Spacer(modifier = Modifier.width(10.dp))
 
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = recipe.name,
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = BrightPink,
-                                    fontFamily = FontFamily(Font(R.font.montserrat))
-                                )
-                                Text("Категория: ${recipe.category}", color = BrightPink)
-                                Text("Сложность: ${recipe.difficulty}", color = BrightPink)
-                                Text("Кухня: ${recipe.cuisine}", color = BrightPink)
-                                Text("Количество порций: ${recipe.servings}", color = BrightPink)
-                                Text("Время приготовления: ${recipe.time} мин", color = BrightPink)
+                                recipe.name?.let {
+                                    Text(
+                                        text = it,
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = BrightPink,
+                                        fontFamily = FontFamily(Font(R.font.montserrat))
+                                    )
+                                }
+
+                                Text("Категория: ${recipe.recipeType?.typeName ?: "-"}", color = BrightPink)
+                                Text("Сложность: ${recipe.difficulty?.difficultyName ?: "-"}", color = BrightPink)
+                                Text("Кухня: ${recipe.cuisine?.cuisineName ?: "-"}", color = BrightPink)
+                                Text("Порций: ${recipe.portions}", color = BrightPink)
+                                Text("Время: ${recipe.cookingTime} мин", color = BrightPink)
                             }
                         }
 
                         Row(
                             horizontalArrangement = Arrangement.End,
                             modifier = Modifier.fillMaxWidth()
-//                        horizontalAlignment = Alignment.CenterHorizontally,
-//                        verticalArrangement = Arrangement.SpaceBetween,
                         ) {
                             Button(
                                 onClick = onRecipeDetails,
@@ -202,6 +234,7 @@ fun HomepageScreen(
                                     fontSize = 12.sp
                                 )
                             }
+
                             IconButton(onClick = onToggleFavorite) {
                                 Icon(
                                     imageVector = Icons.Default.Favorite,
@@ -233,34 +266,85 @@ fun HorizontalScrollableRow(
     }
 }
 
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//fun ComboBoxPlaceholder(label: String) {
+//    var expanded by remember { mutableStateOf(false) }
+//    var selectedText by remember { mutableStateOf("") }
+//    val options = listOf("Вариант 1", "Вариант 2", "Вариант 3") // варианты выбора
+//
+//    ExposedDropdownMenuBox(
+//        expanded = expanded,
+//        onExpandedChange = { expanded = !expanded }
+//    ) {
+//        OutlinedTextField(
+//            value = selectedText,
+//            onValueChange = {},
+//            label = {
+//                Text(
+//                    label,
+//                    color = BrightPink,
+//                    fontSize = 12.sp
+//                )
+//            },
+//            trailingIcon = {
+//                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+//            },
+//            modifier = Modifier
+////                .width()
+//                .menuAnchor(), //  связывает поле с меню
+//            readOnly = true, //  только чтение
+//            colors = TextFieldDefaults.colors(
+//                focusedContainerColor = Pink,
+//                unfocusedContainerColor = Pink,
+//                focusedTextColor = BrightPink,
+//                unfocusedTextColor = BrightPink,
+//                unfocusedIndicatorColor = Color.Transparent,
+//                focusedIndicatorColor = Color.Transparent,
+//            ),
+//            shape = RoundedCornerShape(30.dp)
+//        )
+//
+//        //menu
+//        ExposedDropdownMenu(
+//            expanded = expanded,
+//            onDismissRequest = { expanded = false }
+//        ) {
+//            options.forEach { option ->
+//                DropdownMenuItem(
+//                    text = {
+//                        Text(
+//                            option,
+//                            fontSize = 12.sp,
+//                            color = BrightPink
+//                        )
+//                    },
+//                    onClick = {
+//                        selectedText = option
+//                        expanded = false //закрываем меню
+//                    }
+//                )
+//            }
+//        }
+//    }
+//}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ComboBoxPlaceholder(label: String) {
+fun RecipeTypeComboBox(
+    types: List<RecipeType>,
+    selectedType: RecipeType?,
+    onTypeSelected: (RecipeType?) -> Unit
+) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedText by remember { mutableStateOf("") }
-    val options = listOf("Вариант 1", "Вариант 2", "Вариант 3") // варианты выбора
 
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded }
-    ) {
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
         OutlinedTextField(
-            value = selectedText,
+            value = selectedType?.typeName ?: "тип",
             onValueChange = {},
-            label = {
-                Text(
-                    label,
-                    color = BrightPink,
-                    fontSize = 12.sp
-                )
-            },
-            trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-            },
-            modifier = Modifier
-//                .width()
-                .menuAnchor(), //  связывает поле с меню
-            readOnly = true, //  только чтение
+            label = { Text("тип", color = BrightPink, fontSize = 12.sp) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier.menuAnchor(),
+            readOnly = true,
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = Pink,
                 unfocusedContainerColor = Pink,
@@ -272,24 +356,101 @@ fun ComboBoxPlaceholder(label: String) {
             shape = RoundedCornerShape(30.dp)
         )
 
-        //menu
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            options.forEach { option ->
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text("Все типы", fontSize = 12.sp, color = BrightPink) },
+                onClick = { onTypeSelected(null) }
+            )
+            types.forEach { type ->
                 DropdownMenuItem(
-                    text = {
-                        Text(
-                            option,
-                            fontSize = 12.sp,
-                            color = BrightPink
-                        )
-                    },
-                    onClick = {
-                        selectedText = option
-                        expanded = false //закрываем меню
-                    }
+                    text = { Text(type.typeName, fontSize = 12.sp, color = BrightPink) },
+                    onClick = { onTypeSelected(type) }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RecipeDifficultyComboBox(
+    difficulties: List<RecipeDifficulty>,
+    selectedDifficulty: RecipeDifficulty?,
+    onDifficultySelected: (RecipeDifficulty?) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
+        OutlinedTextField(
+            value = selectedDifficulty?.difficultyName ?: "сложность",
+            onValueChange = {},
+            label = { Text("сложность", color = BrightPink, fontSize = 12.sp) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier.menuAnchor(),
+            readOnly = true,
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Pink,
+                unfocusedContainerColor = Pink,
+                focusedTextColor = BrightPink,
+                unfocusedTextColor = BrightPink,
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent,
+            ),
+            shape = RoundedCornerShape(30.dp)
+        )
+
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text("Все сложности", fontSize = 12.sp, color = BrightPink) },
+                onClick = { onDifficultySelected(null) }
+            )
+            difficulties.forEach { difficulty ->
+                DropdownMenuItem(
+                    text = { Text(difficulty.difficultyName, fontSize = 12.sp, color = BrightPink) },
+                    onClick = { onDifficultySelected(difficulty) }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RecipeCuisineComboBox(
+    cuisines: List<RecipeCuisine>,
+    selectedCuisine: RecipeCuisine?,
+    onCuisineSelected: (RecipeCuisine?) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
+        OutlinedTextField(
+            value = selectedCuisine?.cuisineName ?: "кухня",
+            onValueChange = {},
+            label = { Text("кухня", color = BrightPink, fontSize = 12.sp) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier.menuAnchor(),
+            readOnly = true,
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Pink,
+                unfocusedContainerColor = Pink,
+                focusedTextColor = BrightPink,
+                unfocusedTextColor = BrightPink,
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent,
+            ),
+            shape = RoundedCornerShape(30.dp)
+        )
+
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text("Все кухни", fontSize = 12.sp, color = BrightPink) },
+                onClick = { onCuisineSelected(null) }
+            )
+            cuisines.forEach { cuisine ->
+                DropdownMenuItem(
+                    text = { Text(cuisine.cuisineName, fontSize = 12.sp, color = BrightPink) },
+                    onClick = { onCuisineSelected(cuisine) }
                 )
             }
         }

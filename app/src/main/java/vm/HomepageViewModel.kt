@@ -1,107 +1,215 @@
 package vm
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.myapp.api.models.RecipeCuisine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import com.example.myapp.api.models.RecipeDTO
+import com.example.myapp.api.models.RecipeDifficulty
+import com.example.myapp.api.models.RecipeType
+import withFullImageUrl
+
+
+
+import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
+data class InitialData(
+    val recipes: List<com.example.myapp.api.models.RecipeDTO>,
+    val types: List<com.example.myapp.api.models.RecipeType>,
+    val difficulties: List<com.example.myapp.api.models.RecipeDifficulty>,
+    val cuisines: List<com.example.myapp.api.models.RecipeCuisine>
+)
 
 data class HomepageState(
-    val recipes: List<Recipe> = emptyList(), // все рецепты
-    val filteredRecipes: List<Recipe> = emptyList(), // отфильтрованные рецепты
+    val recipes: List<RecipeDTO> = emptyList(), // Используем RecipeDTO напрямую
+    val filteredRecipes: List<RecipeDTO> = emptyList(),
     val searchQuery: String = "",
-    val selectedCategory: String = "",
-    val selectedDifficulty: String = "",
-    val selectedCuisine: String = "",
-    val isLoading: Boolean = false
+    val selectedType: RecipeType? = null,
+    val selectedDifficulty: RecipeDifficulty? = null,
+    val selectedCuisine: RecipeCuisine? = null,
+    val isLoading: Boolean = false,
+    val error: String? = null,
+    val recipeTypes: List<RecipeType> = emptyList(),
+    val difficulties: List<RecipeDifficulty> = emptyList(),
+    val cuisines: List<RecipeCuisine> = emptyList()
 )
 
 class HomepageViewModel : ViewModel() {
+    private val recipeApi = ApiProvider.recipeApi
+    private val catalogApi = ApiProvider.catalogApi
+
     private val _state = MutableStateFlow(HomepageState())
     val state = _state.asStateFlow()
 
     init {
-        loadRecipes()
+        loadInitialData()
     }
 
-    fun loadRecipes() {
-        _state.value = HomepageState(
-            recipes = listOf(
-                Recipe(
-                    name = "Эклеры",
-                    servings = 10,
-                    time = 120,
-                    category = "десерт",
-                    difficulty = "5★",
-                    cuisine = "французская"
-                ),
-                Recipe(
-                    name = "Тирамису",
-                    servings = 6,
-                    time = 90,
-                    category = "десерт",
-                    difficulty = "3★",
-                    cuisine = "итальянская"
-                ),
-                Recipe(
-                    name = "Паста Карбонара",
-                    servings = 4,
-                    time = 30,
-                    category = "основное",
-                    difficulty = "2★",
-                    cuisine = "итальянская"
+    private fun loadInitialData() {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true, error = null)
+
+            try {
+                val data = withContext(Dispatchers.IO) {
+
+                    val recipesResp = try {
+                        recipeApi.apiRecipeGet().execute()
+                    } catch (e: Exception) {
+                        Log.e("HomepageVM", "apiRecipeGet execute failed", e)
+                        null
+                    }
+                    val fixedRecipes = recipesResp?.body()?.map { it.withFullImageUrl() } ?: emptyList()
+
+                    //Log.d("HomepageVM", "First recipe image url = ${fixedRecipes.firstOrNull()?.mainImagePath}")
+
+
+                    val typesResp = try {
+                        catalogApi.recipetypesGet().execute()
+                    } catch (e: Exception) {
+                        Log.e("HomepageVM", "recipetypesGet execute failed", e)
+                        null
+                    }
+
+                    val difficultiesResp = try {
+                        catalogApi.difficultiesGet().execute()
+                    } catch (e: Exception) {
+                        Log.e("HomepageVM", "difficultiesGet execute failed", e)
+                        null
+                    }
+
+                    val cuisinesResp = try {
+                        catalogApi.cuisinesGet().execute()
+                    } catch (e: Exception) {
+                        Log.e("HomepageVM", "cuisinesGet execute failed", e)
+                        null
+                    }
+
+                    InitialData(
+                        recipes = fixedRecipes,//recipesResp?.body() ?: emptyList(),
+                        types = typesResp?.body() ?: emptyList(),
+                        difficulties = difficultiesResp?.body() ?: emptyList(),
+                        cuisines = cuisinesResp?.body() ?: emptyList()
+                    )
+                }
+
+                Log.d("HomepageVM", "Loaded recipes count = ${data.recipes.size}")
+
+                _state.value = HomepageState(
+                    recipes = data.recipes,
+                    filteredRecipes = data.recipes,
+                    recipeTypes = data.types,
+                    difficulties = data.difficulties,
+                    cuisines = data.cuisines,
+                    isLoading = false
                 )
-            ),
-            filteredRecipes = listOf(
-                Recipe(
-                    name = "Эклеры",
-                    servings = 10,
-                    time = 120,
-                    category = "десерт",
-                    difficulty = "5★",
-                    cuisine = "французская"
-                ),
-                Recipe(
-                    name = "Тирамису",
-                    servings = 6,
-                    time = 90,
-                    category = "десерт",
-                    difficulty = "3★",
-                    cuisine = "итальянская"
-                ),
-                Recipe(
-                    name = "Паста Карбонара",
-                    servings = 4,
-                    time = 30,
-                    category = "основное",
-                    difficulty = "2★",
-                    cuisine = "итальянская"
+
+            } catch (e: Exception) {
+                Log.e("HomepageVM", "loadInitialData top-level failure", e)
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    error = "Ошибка загрузки: ${e.message}"
                 )
-            )
-        )
+            }
+        }
     }
+
 
     fun searchRecipes(query: String) {
-        val filtered = _state.value.recipes.filter {
-            it.name.contains(query, ignoreCase = true)
+        _state.value = _state.value.copy(searchQuery = query)
+        applyFilters()
+    }
+
+    fun filterByType(type: RecipeType?) {
+        _state.value = _state.value.copy(selectedType = type)
+        applyFilters()
+    }
+
+    fun filterByDifficulty(difficulty: RecipeDifficulty?) {
+        _state.value = _state.value.copy(selectedDifficulty = difficulty)
+        applyFilters()
+    }
+
+    fun filterByCuisine(cuisine: RecipeCuisine?) {
+        _state.value = _state.value.copy(selectedCuisine = cuisine)
+        applyFilters()
+    }
+
+    private fun applyFilters() {
+        val currentState = _state.value
+        var filtered = currentState.recipes
+
+        // Текстовый поиск
+        if (currentState.searchQuery.isNotBlank()) {
+            filtered = filtered.filter { recipe ->
+                recipe.name?.contains(currentState.searchQuery, ignoreCase = true) == true
+            }
         }
-        _state.value = _state.value.copy(
-            searchQuery = query,
-            filteredRecipes = filtered
-        )
+
+        // Фильтр по типу
+        currentState.selectedType?.let { selectedType ->
+            filtered = filtered.filter { recipe ->
+                recipe.recipeType?.id == selectedType.id
+            }
+        }
+
+        // Фильтр по сложности
+        currentState.selectedDifficulty?.let { selectedDifficulty ->
+            filtered = filtered.filter { recipe ->
+                recipe.difficulty?.id == selectedDifficulty.id
+            }
+        }
+
+        // Фильтр по кухне
+        currentState.selectedCuisine?.let { selectedCuisine ->
+            filtered = filtered.filter { recipe ->
+                recipe.cuisine?.id == selectedCuisine.id
+            }
+        }
+
+        _state.value = currentState.copy(filteredRecipes = filtered)
     }
 
-    fun filterByCategory(category: String) {
-
+    fun toggleFavorite(recipe: RecipeDTO) {
+//        viewModelScope.launch {
+//            try {
+//                // Обновляем локальное состояние
+//                val updatedRecipes = _state.value.recipes.map {
+//                    if (it.id == recipe.id) {
+//                        it.copy(isFav = !it.isFav)
+//                    } else {
+//                        it
+//                    }
+//                }
+//
+//                val updatedFilteredRecipes = _state.value.filteredRecipes.map {
+//                    if (it.id == recipe.id) {
+//                        it.copy(isFav = !it.isFav)
+//                    } else {
+//                        it
+//                    }
+//                }
+//
+//                _state.value = _state.value.copy(
+//                    recipes = updatedRecipes,
+//                    filteredRecipes = updatedFilteredRecipes
+//                )
+//            } catch (e: Exception) {
+//                _state.value = _state.value.copy(
+//                    error = "Ошибка обновления избранного: ${e.message}"
+//                )
+//            }
+//        }
     }
 
-    fun filterByDifficulty(difficulty: String) {
-
+    fun clearError() {
+        _state.value = _state.value.copy(error = null)
     }
 
-    fun filterByCuisine(cuisine: String) {
-
-    }
-
-    fun toggleFavorite(recipe: Recipe) {
-
+    fun refresh() {
+        loadInitialData()
     }
 }
