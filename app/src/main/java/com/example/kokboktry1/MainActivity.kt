@@ -39,8 +39,6 @@ object Routes {
     const val PROFILE = "profile"
     const val FAVORITES = "favorites"
     const val FORM = "form"
-    const val EDITFORM = "editform"
-    const val DETAILS = "details"
 }
 
 class MainActivity : ComponentActivity() {
@@ -65,8 +63,12 @@ class MainActivity : ComponentActivity() {
 
                     composable(Routes.REGISTER) {
                         RegisterScreen(
-                            onRegisterSuccess = { navController.navigate(Routes.HOME) },
-                            onNavigateToLogin = { navController.navigate(Routes.LOGIN) }
+                            onRegisterSuccess = {
+                                navController.navigate(Routes.LOGIN)
+                            },
+                            onNavigateToLogin = {
+                                navController.navigate(Routes.LOGIN)
+                            }
                         )
                     }
 
@@ -97,6 +99,9 @@ class MainActivity : ComponentActivity() {
                             onNavigateHome = { navController.navigate(Routes.HOME) },
                             onNavigateFavorites = { navController.navigate(Routes.FAVORITES) },
                             onNavigateProfile = { navController.navigate(Routes.PROFILE) },
+                            onRecipeDetails = { recipeId ->
+                                navController.navigate("details/$recipeId")
+                            }
                         )
                     }
 

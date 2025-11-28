@@ -3,8 +3,10 @@ package com.example.kokboktry1
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -27,8 +29,11 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.ui.layout.ContentScale
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import vm.AddRecipeViewModel
 import vm.FavoritesViewModel
 import com.example.kokboktry1.ui.theme.Pink
@@ -41,6 +46,7 @@ fun FavoritesScreen(
     onNavigateSearch: () -> Unit = {},
     onNavigateFavorites: () -> Unit = {},
     onNavigateProfile: () -> Unit = {},
+    onRecipeDetails: (Int) -> Unit = {},
     viewModel: FavoritesViewModel = viewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -54,9 +60,6 @@ fun FavoritesScreen(
                 IconButton(onClick = onNavigateHome, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Default.Home, "Главная", tint = BrightPink)
                 }
-                IconButton(onClick = onNavigateSearch, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Default.Search, "Поиск", tint = BrightPink)
-                }
                 IconButton(onClick = onNavigateFavorites, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Default.Favorite, "Избранное", tint = BrightPink)
                 }
@@ -67,11 +70,14 @@ fun FavoritesScreen(
         },
         contentWindowInsets = WindowInsets(0)
     ){ innerPadding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(LightPink)
+                .padding(6.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Column(
                 modifier = Modifier
@@ -102,7 +108,6 @@ fun FavoritesScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Блок рецепта
                 state.favoriteRecipes.forEach { recipe ->
                     Spacer(modifier = Modifier.height(12.dp))
                     Box(
@@ -113,73 +118,61 @@ fun FavoritesScreen(
                     ) {
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(100.dp, 70.dp)
-                                        .background(Color.LightGray, RoundedCornerShape(10.dp))
-                                ) {
-                                    Text(
-                                        text = "Фото",
-                                        modifier = Modifier.align(Alignment.Center),
-                                        color = Color.DarkGray
+                                val imageUrl = recipe.mainImagePath
+                                if (!imageUrl.isNullOrEmpty()) {
+                                    //Coil для загрузки изображения
+                                    AsyncImage(
+                                        model = imageUrl,
+                                        contentDescription = "Фото рецепта",
+                                        modifier = Modifier
+                                            .size(100.dp, 70.dp)
+                                            .clip(RoundedCornerShape(10.dp)),
+                                        contentScale = ContentScale.Crop
                                     )
+                                } else {
+                                    // Плейсхолдер если изображения нет
+                                    Box(
+                                        modifier = Modifier
+                                            .size(100.dp, 70.dp)
+                                            .background(Color.LightGray, RoundedCornerShape(10.dp))
+                                    ) {
+                                        Text(
+                                            text = "Нет фото",
+                                            modifier = Modifier.align(Alignment.Center),
+                                            color = Color.DarkGray
+                                        )
+                                    }
                                 }
 
                                 Spacer(modifier = Modifier.width(10.dp))
 
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = recipe.name,
-                                        fontSize = 20.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = BrightPink,
-                                        fontFamily = FontFamily(Font(R.font.montserrat))
-                                    )
-                                    Text(
-                                        text = "Категория: ${recipe.category}",
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = BrightPink,
-                                        fontFamily = FontFamily(Font(R.font.montserrat))
-                                    )
-                                    Text(
-                                        text = "Сложность: ${recipe.difficulty}",
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = BrightPink,
-                                        fontFamily = FontFamily(Font(R.font.montserrat))
-                                    )
-                                    Text(
-                                        text = "Кухня: ${recipe.cuisine}",
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = BrightPink,
-                                        fontFamily = FontFamily(Font(R.font.montserrat))
-                                    )
-                                    Text(
-                                        text = "Количество порций: ${recipe.servings}",
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = BrightPink,
-                                        fontFamily = FontFamily(Font(R.font.montserrat))
-                                    )
-                                    Text(
-                                        text = "Время: ${recipe.time} мин",
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = BrightPink,
-                                        fontFamily = FontFamily(Font(R.font.montserrat))
-                                    )
+                                    recipe.name?.let {
+                                        Text(
+                                            text = it,
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = BrightPink,
+                                            fontFamily = FontFamily(Font(R.font.montserrat))
+                                        )
+                                    }
+
+                                    Text("Категория: ${recipe.recipeType?.typeName ?: "-"}", color = BrightPink)
+                                    Text("Сложность: ${recipe.difficulty?.difficultyName ?: "-"}", color = BrightPink)
+                                    Text("Кухня: ${recipe.cuisine?.cuisineName ?: "-"}", color = BrightPink)
+                                    Text("Порций: ${recipe.portions}", color = BrightPink)
+                                    Text("Время: ${recipe.cookingTime} мин", color = BrightPink)
                                 }
                             }
+
                             Row(
                                 horizontalArrangement = Arrangement.End,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Button(
-                                    onClick = onNavigateFavorites,
+                                    onClick = { onRecipeDetails(recipe.id ?: return@Button) },
                                     shape = RoundedCornerShape(20.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = Pink),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Pink)
                                 ) {
                                     Text(
                                         "Подробнее",
@@ -189,11 +182,14 @@ fun FavoritesScreen(
                                         fontSize = 12.sp
                                     )
                                 }
-                                IconButton(onClick = { viewModel.onLikeClick(recipe) }) {
+
+                                IconButton(onClick = {
+                                    viewModel.toggleFavorite(recipe.id ?: return@IconButton)
+                                }) {
                                     Icon(
-                                        imageVector = Icons.Default.Favorite,
+                                        imageVector = if (recipe.isFav == true) Icons.Filled.Favorite else Icons.Outlined.Favorite,
                                         contentDescription = "Избранное",
-                                        tint = BrightPink,
+                                        tint = if (recipe.isFav == true) BrightPink else Pink.copy(alpha = 0.6f)
                                     )
                                 }
                             }
@@ -201,11 +197,11 @@ fun FavoritesScreen(
                     }
                 }
 
-                    }
-                }
-
             }
         }
+
+    }
+}
 
 
 // Преview для визуализации в Android Studio

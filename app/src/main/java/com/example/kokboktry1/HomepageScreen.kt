@@ -31,7 +31,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import vm.HomepageViewModel
-import com.example.myapp.api.models.RecipeDTO
 import com.example.myapp.api.models.RecipeDifficulty
 import com.example.myapp.api.models.RecipeType
 import com.example.myapp.api.models.RecipeCuisine
@@ -39,6 +38,7 @@ import com.example.kokboktry1.ui.theme.Pink
 import com.example.kokboktry1.ui.theme.WhitePink
 import com.example.kokboktry1.ui.theme.BrightPink
 import com.example.kokboktry1.ui.theme.LightPink
+import androidx.compose.material.icons.outlined.Favorite
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun HomepageScreen(
@@ -47,8 +47,6 @@ fun HomepageScreen(
     onNavigateFavorites: () -> Unit = {},
     onNavigateProfile: () -> Unit = {},
     onRecipeDetails: (Int) -> Unit = {},
-
-    onToggleFavorite: () -> Unit = {},
     viewModel: HomepageViewModel = viewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -63,9 +61,6 @@ fun HomepageScreen(
             ) {
                 IconButton(onClick = onNavigateHome, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Default.Home, "Главная", tint = BrightPink)
-                }
-                IconButton(onClick = onNavigateSearch, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Default.Search, "Поиск", tint = BrightPink)
                 }
                 IconButton(onClick = onNavigateFavorites, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Default.Favorite, "Избранное", tint = BrightPink)
@@ -233,11 +228,13 @@ fun HomepageScreen(
                                 )
                             }
 
-                            IconButton(onClick = onToggleFavorite) {
+                            IconButton(onClick = {
+                                viewModel.toggleFavorite(recipe.id ?: return@IconButton)
+                            }) {
                                 Icon(
-                                    imageVector = Icons.Default.Favorite,
+                                    imageVector = if (recipe.isFav == true) Icons.Filled.Favorite else Icons.Outlined.Favorite,
                                     contentDescription = "Избранное",
-                                    tint = BrightPink
+                                    tint = if (recipe.isFav == true) BrightPink else Pink.copy(alpha = 0.6f)
                                 )
                             }
                         }

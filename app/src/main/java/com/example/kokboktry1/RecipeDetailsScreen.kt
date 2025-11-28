@@ -35,7 +35,6 @@ fun RecipeDetailsScreen(
     recipeId: Int,
     onBack: () -> Unit,
     onNavigateHome: () -> Unit = {},
-    onNavigateSearch: () -> Unit = {},
     onNavigateFavorites: () -> Unit = {},
     onNavigateProfile: () -> Unit = {}
 ) {
@@ -51,9 +50,6 @@ fun RecipeDetailsScreen(
             BottomAppBar(containerColor = Pink) {
                 IconButton(onClick = onNavigateHome, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Default.Home, contentDescription = "Главная", tint = BrightPink)
-                }
-                IconButton(onClick = onNavigateSearch, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Default.Search, contentDescription = "Поиск", tint = BrightPink)
                 }
                 IconButton(onClick = onNavigateFavorites, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Default.Favorite, contentDescription = "Избранное", tint = BrightPink)

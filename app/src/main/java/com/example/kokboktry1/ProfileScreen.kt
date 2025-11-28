@@ -60,9 +60,6 @@ fun ProfileScreen(
                 IconButton(onClick = onNavigateHome, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Default.Home, "Главная", tint = BrightPink)
                 }
-                IconButton(onClick = onNavigateSearch, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Default.Search, "Поиск", tint = BrightPink)
-                }
                 IconButton(onClick = onNavigateFavorites, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Default.Favorite, "Избранное", tint = BrightPink)
                 }

@@ -14,6 +14,7 @@ import withFullImageUrl
 
 
 import android.util.Log
+import com.example.myapp.api.models.FavRecipeDTO
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -25,7 +26,7 @@ data class InitialData(
 )
 
 data class HomepageState(
-    val recipes: List<RecipeDTO> = emptyList(), // Используем RecipeDTO напрямую
+    val recipes: List<RecipeDTO> = emptyList(),
     val filteredRecipes: List<RecipeDTO> = emptyList(),
     val searchQuery: String = "",
     val selectedType: RecipeType? = null,
@@ -45,9 +46,11 @@ data class HomepageState(
 
 )
 
-class HomepageViewModel : ViewModel() {
+class HomepageViewModel : ViewModel()
+{
     private val recipeApi = ApiProvider.recipeApi
     private val catalogApi = ApiProvider.catalogApi
+    private val favrecipeApi = ApiProvider.favrecipeApi
 
     private val _state = MutableStateFlow(HomepageState())
     val state = _state.asStateFlow()
@@ -62,7 +65,7 @@ class HomepageViewModel : ViewModel() {
 
             try {
                 val data = withContext(Dispatchers.IO) {
-
+                    // Загружаем основные данные
                     val recipesResp = try {
                         recipeApi.apiRecipeGet().execute()
                     } catch (e: Exception) {
@@ -71,8 +74,38 @@ class HomepageViewModel : ViewModel() {
                     }
                     val fixedRecipes = recipesResp?.body()?.map { it.withFullImageUrl() } ?: emptyList()
 
-                    //Log.d("HomepageVM", "First recipe image url = ${fixedRecipes.firstOrNull()?.mainImagePath}")
+                    Log.d("HomepageVM", "Loaded ${fixedRecipes.size} recipes from API")
+                    fixedRecipes.forEachIndexed { index, recipe ->
+                        Log.d("HomepageVM", "Recipe $index: id=${recipe.id}, name=${recipe.name}, isFav=${recipe.isFav}")
+                    }
 
+                    //избранные
+                    val favoriteRecipes = try {
+                        val response = favrecipeApi.apiFavRecipeUserFavoritesGet().execute()
+                        Log.d("HomepageVM", "Favorites response: code=${response.code()}, body=${response.body()?.size}")
+                        response.body() ?: emptyList()
+                    } catch (e: Exception) {
+                        Log.e("HomepageVM", "Failed to load favorites", e)
+                        emptyList()
+                    }
+
+                    Log.d("HomepageVM", "Loaded ${favoriteRecipes.size} favorite recipes")
+                    favoriteRecipes.forEachIndexed { index, recipe ->
+                        Log.d("HomepageVM", "Favorite $index: id=${recipe.id}, name=${recipe.name}")
+                    }
+
+                    val favoriteRecipeIds = favoriteRecipes.map { it.id }.toSet()
+                    Log.d("HomepageVM", "Favorite IDs: $favoriteRecipeIds")
+
+                    //С isFav = true
+                    val recipesWithFavorites = fixedRecipes.map { recipe ->
+                        val isFav = recipe.id in favoriteRecipeIds
+                        Log.d("HomepageVM", "Recipe ${recipe.id} isFav=$isFav")
+                        recipe.copy(isFav = isFav)
+                    }
+
+                    val favCount = recipesWithFavorites.count { it.isFav == true }
+                    Log.d("HomepageVM", "Final: $favCount recipes marked as favorite")
 
                     val typesResp = try {
                         catalogApi.recipetypesGet().execute()
@@ -96,14 +129,14 @@ class HomepageViewModel : ViewModel() {
                     }
 
                     InitialData(
-                        recipes = fixedRecipes,//recipesResp?.body() ?: emptyList(),
+                        recipes = recipesWithFavorites,
                         types = typesResp?.body() ?: emptyList(),
                         difficulties = difficultiesResp?.body() ?: emptyList(),
                         cuisines = cuisinesResp?.body() ?: emptyList()
                     )
                 }
 
-                Log.d("HomepageVM", "Loaded recipes count = ${data.recipes.size}")
+                Log.d("HomepageVM", "Final data: ${data.recipes.size} recipes, ${data.recipes.count { it.isFav == true }} favorites")
 
                 _state.value = HomepageState(
                     recipes = data.recipes,
@@ -123,28 +156,22 @@ class HomepageViewModel : ViewModel() {
             }
         }
     }
-
-
     fun searchRecipes(query: String) {
         _state.value = _state.value.copy(searchQuery = query)
         applyFilters()
     }
-
     fun filterByType(type: RecipeType?) {
         _state.value = _state.value.copy(selectedType = type)
         applyFilters()
     }
-
     fun filterByDifficulty(difficulty: RecipeDifficulty?) {
         _state.value = _state.value.copy(selectedDifficulty = difficulty)
         applyFilters()
     }
-
     fun filterByCuisine(cuisine: RecipeCuisine?) {
         _state.value = _state.value.copy(selectedCuisine = cuisine)
         applyFilters()
     }
-
     private fun applyFilters() {
         val currentState = _state.value
         var filtered = currentState.recipes
@@ -155,28 +182,24 @@ class HomepageViewModel : ViewModel() {
                 recipe.name?.contains(currentState.searchQuery, ignoreCase = true) == true
             }
         }
-
         // Фильтр по типу
         currentState.selectedType?.let { selectedType ->
             filtered = filtered.filter { recipe ->
                 recipe.recipeType?.id == selectedType.id
             }
         }
-
         // Фильтр по сложности
         currentState.selectedDifficulty?.let { selectedDifficulty ->
             filtered = filtered.filter { recipe ->
                 recipe.difficulty?.id == selectedDifficulty.id
             }
         }
-
         // Фильтр по кухне
         currentState.selectedCuisine?.let { selectedCuisine ->
             filtered = filtered.filter { recipe ->
                 recipe.cuisine?.id == selectedCuisine.id
             }
         }
-
         _state.value = currentState.copy(filteredRecipes = filtered)
     }
     fun toggleFilter(tag: String) {
@@ -247,38 +270,43 @@ class HomepageViewModel : ViewModel() {
         _state.value = s.copy(filteredRecipes = list)
     }
 
-    fun toggleFavorite(recipe: RecipeDTO) {
-//        viewModelScope.launch {
-//            try {
-//                // Обновляем локальное состояние
-//                val updatedRecipes = _state.value.recipes.map {
-//                    if (it.id == recipe.id) {
-//                        it.copy(isFav = !it.isFav)
-//                    } else {
-//                        it
-//                    }
-//                }
-//
-//                val updatedFilteredRecipes = _state.value.filteredRecipes.map {
-//                    if (it.id == recipe.id) {
-//                        it.copy(isFav = !it.isFav)
-//                    } else {
-//                        it
-//                    }
-//                }
-//
-//                _state.value = _state.value.copy(
-//                    recipes = updatedRecipes,
-//                    filteredRecipes = updatedFilteredRecipes
-//                )
-//            } catch (e: Exception) {
-//                _state.value = _state.value.copy(
-//                    error = "Ошибка обновления избранного: ${e.message}"
-//                )
-//            }
-//        }
-    }
+    fun toggleFavorite(recipeId: Int) {
+        viewModelScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    val currentState = _state.value
+                    val recipe = currentState.recipes.find { it.id == recipeId }
 
+                    if (recipe?.isFav == true) {
+                        // Удаляем из избранного
+                        favrecipeApi.apiFavRecipeRecipeRecipeIdDelete(recipeId).execute()
+                    } else {
+                        val favRecipeDto = FavRecipeDTO(
+                            id = -1,
+                            userId = "",
+                            recipeId = recipeId
+                        )
+                        favrecipeApi.apiFavRecipePost(favRecipeDto).execute()
+                    }
+                }
+
+                // Обновление UI
+                val currentState = _state.value
+                val updatedRecipes = currentState.recipes.map {
+                    if (it.id == recipeId) it.copy(isFav = !(it.isFav == true)) else it
+                }
+
+                _state.value = currentState.copy(recipes = updatedRecipes)
+                applyFilters()
+
+            } catch (e: Exception) {
+                Log.e("HomepageVM", "Failed to toggle favorite", e)
+                _state.value = _state.value.copy(
+                    error = "Ошибка при обновлении избранного: ${e.message}"
+                )
+            }
+        }
+    }
     fun clearError() {
         _state.value = _state.value.copy(error = null)
     }
@@ -286,4 +314,5 @@ class HomepageViewModel : ViewModel() {
     fun refresh() {
         loadInitialData()
     }
+
 }

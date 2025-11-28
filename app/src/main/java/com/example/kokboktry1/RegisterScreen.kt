@@ -15,26 +15,31 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import vm.RegisterViewModel
 
 @Composable
 fun RegisterScreen(
-    onRegisterSuccess: () -> Unit = {},          // Колбэк при успешном входе
-    onNavigateToLogin: () -> Unit = {}     // Колбэк для перехода к регистрации
+    onRegisterSuccess: () -> Unit = {},
+    onNavigateToLogin: () -> Unit = {}
 ) {
     // Состояния для текстовых полей
     var login by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var repeatpassword by remember { mutableStateOf("") }
 
-    val Pink = Color(0xFFFF9FBA)
-    val WhitePink = Color(0xFFFFDFEC)
-    val BrightPink = Color(0xFFFF0090)
-    val LightPink = Color(0xFFFFC7DD)
+    val viewModel: RegisterViewModel = viewModel()
+    val state by viewModel.state.collectAsState()
+
+    // Обработка успешной регистрации
+    LaunchedEffect(state.success) {
+        if (state.success) onRegisterSuccess()
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(LightPink)
+            .background(Color(0xFFFFC7DD)) // LightPink
             .padding(32.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -45,7 +50,7 @@ fun RegisterScreen(
             fontSize = 64.sp,
             fontWeight = FontWeight.Normal,
             fontFamily = FontFamily(Font(R.font.abrilfatface)),
-            color = BrightPink,
+            color = Color(0xFFFF0090), // BrightPink
         )
         Spacer(modifier = Modifier.height(3.dp))
 
@@ -54,25 +59,28 @@ fun RegisterScreen(
             fontSize = 20.sp,
             fontWeight = FontWeight.SemiBold,
             fontFamily = FontFamily(Font(R.font.montserrat)),
-            color = BrightPink,
+            color = Color(0xFFFF0090), // BrightPink
         )
         Spacer(modifier = Modifier.height(10.dp))
 
         OutlinedTextField(
             value = login,
             onValueChange = { newText -> login = newText },
-            label = { Text("логин",
-                 fontFamily = FontFamily(Font(R.font.montserrat)),
-                fontWeight = FontWeight.SemiBold,
-                ) },
+            label = {
+                Text(
+                    "логин",
+                    fontFamily = FontFamily(Font(R.font.montserrat)),
+                    fontWeight = FontWeight.SemiBold,
+                )
+            },
             modifier = Modifier.fillMaxWidth(),
             colors = TextFieldDefaults.colors(
-                unfocusedContainerColor = Pink,
-                focusedContainerColor = Pink,
-                unfocusedTextColor = BrightPink,
-                focusedTextColor =BrightPink,
-                unfocusedLabelColor = BrightPink,
-                focusedLabelColor = BrightPink,
+                unfocusedContainerColor = Color(0xFFFF9FBA), // Pink
+                focusedContainerColor = Color(0xFFFF9FBA), // Pink
+                unfocusedTextColor = Color(0xFFFF0090), // BrightPink
+                focusedTextColor = Color(0xFFFF0090), // BrightPink
+                unfocusedLabelColor = Color(0xFFFF0090), // BrightPink
+                focusedLabelColor = Color(0xFFFF0090), // BrightPink
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent
             ),
@@ -82,21 +90,23 @@ fun RegisterScreen(
 
         OutlinedTextField(
             value = password,
-            onValueChange = { newText ->
-                password = newText
+            onValueChange = { newText -> password = newText },
+            label = {
+                Text(
+                    "пароль",
+                    fontFamily = FontFamily(Font(R.font.montserrat)),
+                    fontWeight = FontWeight.SemiBold,
+                )
             },
-            label = { Text("пароль",
-                fontFamily = FontFamily(Font(R.font.montserrat)),
-                fontWeight = FontWeight.SemiBold,) },
-            visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(), // Точки вместо текста
+            visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
             colors = TextFieldDefaults.colors(
-                unfocusedContainerColor = Pink,
-                focusedContainerColor = Pink,
-                unfocusedTextColor = BrightPink,
-                focusedTextColor = BrightPink,
-                unfocusedLabelColor = BrightPink,
-                focusedLabelColor = BrightPink,
+                unfocusedContainerColor = Color(0xFFFF9FBA), // Pink
+                focusedContainerColor = Color(0xFFFF9FBA), // Pink
+                unfocusedTextColor = Color(0xFFFF0090), // BrightPink
+                focusedTextColor = Color(0xFFFF0090), // BrightPink
+                unfocusedLabelColor = Color(0xFFFF0090), // BrightPink
+                focusedLabelColor = Color(0xFFFF0090), // BrightPink
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent
             ),
@@ -106,56 +116,87 @@ fun RegisterScreen(
 
         OutlinedTextField(
             value = repeatpassword,
-            onValueChange = { newText ->
-                repeatpassword = newText
+            onValueChange = { newText -> repeatpassword = newText },
+            label = {
+                Text(
+                    "повторите пароль",
+                    fontFamily = FontFamily(Font(R.font.montserrat)),
+                    fontWeight = FontWeight.SemiBold,
+                )
             },
-            label = { Text("повторите пароль",
-                fontFamily = FontFamily(Font(R.font.montserrat)),
-                fontWeight = FontWeight.SemiBold,) },
+            visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
-            visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(), // Точки вместо текста
             colors = TextFieldDefaults.colors(
-                unfocusedContainerColor = Pink,
-                focusedContainerColor = Pink,
-                unfocusedTextColor = BrightPink,
-                focusedTextColor = BrightPink,
-                unfocusedLabelColor = BrightPink,
-                focusedLabelColor = BrightPink,
+                unfocusedContainerColor = Color(0xFFFF9FBA), // Pink
+                focusedContainerColor = Color(0xFFFF9FBA), // Pink
+                unfocusedTextColor = Color(0xFFFF0090), // BrightPink
+                focusedTextColor = Color(0xFFFF0090), // BrightPink
+                unfocusedLabelColor = Color(0xFFFF0090), // BrightPink
+                focusedLabelColor = Color(0xFFFF0090), // BrightPink
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent
             ),
             shape = RoundedCornerShape(30.dp)
         )
+
+        // Показываем ошибку, если есть
+        state.error?.let { error ->
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = error,
+                color = Color.Red,
+                fontFamily = FontFamily(Font(R.font.montserrat)),
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+
         Spacer(modifier = Modifier.height(20.dp))
 
         Button(
             onClick = {
-                if (login.isNotEmpty() && password.isNotEmpty() && password == repeatpassword) {
-                    onRegisterSuccess()
+                when {
+                    login.isEmpty() || password.isEmpty() || repeatpassword.isEmpty() -> {
+                        // Можно показать ошибку через ViewModel или локально
+                    }
+                    password != repeatpassword -> {
+                        // Можно показать ошибку через ViewModel или локально
+                    }
+                    else -> {
+                        viewModel.register(login, password)
+                    }
                 }
             },
+            enabled = !state.isLoading,
             modifier = Modifier.width(280.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = BrightPink
+                containerColor = Color(0xFFFF0090) // BrightPink
             )
         ) {
-            Text(
-                "Зарегистрироваться",
-                color = Pink,
-                fontFamily = FontFamily(Font(R.font.montserrat)),
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-            )
+            if (state.isLoading) {
+                CircularProgressIndicator(
+                    color = Color(0xFFFF9FBA), // Pink
+                    modifier = Modifier.size(20.dp)
+                )
+            } else {
+                Text(
+                    "Зарегистрироваться",
+                    color = Color(0xFFFF9FBA), // Pink
+                    fontFamily = FontFamily(Font(R.font.montserrat)),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                )
+            }
         }
 
-        // переход к регситрации
+        // Кнопка перехода к логину
         TextButton(onClick = onNavigateToLogin) {
-            Text("Уже есть аккаунт? Войти",
+            Text(
+                "Уже есть аккаунт? Войти",
                 fontFamily = FontFamily(Font(R.font.montserrat)),
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp,
-                color = BrightPink,
-                )
+                color = Color(0xFFFF0090), // BrightPink
+            )
         }
     }
 }
