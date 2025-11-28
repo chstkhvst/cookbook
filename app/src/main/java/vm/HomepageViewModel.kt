@@ -35,7 +35,14 @@ data class HomepageState(
     val error: String? = null,
     val recipeTypes: List<RecipeType> = emptyList(),
     val difficulties: List<RecipeDifficulty> = emptyList(),
-    val cuisines: List<RecipeCuisine> = emptyList()
+    val cuisines: List<RecipeCuisine> = emptyList(),
+
+    val sortNewest: Boolean = false,
+    val filterIngr7: Boolean = false,
+    val filterIngr10: Boolean = false,
+    val filterTime30: Boolean = false,
+    val filterTime60: Boolean = false
+
 )
 
 class HomepageViewModel : ViewModel() {
@@ -171,6 +178,73 @@ class HomepageViewModel : ViewModel() {
         }
 
         _state.value = currentState.copy(filteredRecipes = filtered)
+    }
+    fun toggleFilter(tag: String) {
+        val s = _state.value
+
+        when (tag) {
+            "сначала новые" ->
+                _state.value = s.copy(sortNewest = true)
+
+            "сначала старые" ->
+                _state.value = s.copy(sortNewest = false)
+
+            "до 7 ингредиентов" ->
+                _state.value = s.copy(
+                    filterIngr7 = !s.filterIngr7,
+                    filterIngr10 = if (!s.filterIngr7) false else s.filterIngr10
+                )
+
+            "до 10 ингредиентов" ->
+                _state.value = s.copy(
+                    filterIngr10 = !s.filterIngr10,
+                    filterIngr7 = if (!s.filterIngr10) false else s.filterIngr7
+                )
+
+            "до 30 мин" ->
+                _state.value = s.copy(
+                    filterTime30 = !s.filterTime30,
+                    filterTime60 = if (!s.filterTime30) false else s.filterTime60
+                )
+
+            "< 1 часа" ->
+                _state.value = s.copy(
+                    filterTime60 = !s.filterTime60,
+                    filterTime30 = if (!s.filterTime60) false else s.filterTime30
+                )
+        }
+
+        applyAdvancedFilters()
+    }
+    private fun applyAdvancedFilters() {
+        val s = _state.value
+        var list = s.recipes
+
+        list = if (s.sortNewest) list.reversed() else list
+
+        val ingredientLimit =
+            when {
+                s.filterIngr7 -> 7
+                s.filterIngr10 -> 10
+                else -> null
+            }
+
+        ingredientLimit?.let { max ->
+            list = list.filter { it.ingredients?.size ?: 0 < max }
+        }
+
+        val timeLimit =
+            when {
+                s.filterTime30 -> 30
+                s.filterTime60 -> 60
+                else -> null
+            }
+
+        timeLimit?.let { max ->
+            list = list.filter { (it.cookingTime ?: 10000) <= max }
+        }
+
+        _state.value = s.copy(filteredRecipes = list)
     }
 
     fun toggleFavorite(recipe: RecipeDTO) {

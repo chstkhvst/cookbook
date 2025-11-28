@@ -1,5 +1,6 @@
 package com.example.kokboktry1
 
+import android.R.attr.type
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -24,57 +25,121 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
+import androidx.navigation.NavType
 import com.example.kokboktry1.ui.theme.Kokboktry1Theme
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
+
+object Routes {
+    const val LOGIN = "login"
+    const val REGISTER = "register"
+    const val HOME = "home"
+    const val PROFILE = "profile"
+    const val FAVORITES = "favorites"
+    const val FORM = "form"
+    const val EDITFORM = "editform"
+    const val DETAILS = "details"
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-            setContent {
-                Kokboktry1Theme {
-                    var currentScreen by remember { mutableStateOf("login") }
+        ApiProvider.initialize(this)
+        setContent {
+            Kokboktry1Theme {
+                val navController = rememberNavController()
 
-                    when (currentScreen) {
-                        "login" -> LoginScreen(
-                            onLoginSuccess = {
-                                currentScreen = "home"
-                                //currentScreen = "details"
-                            },
-                            onNavigateToRegister = {
-                                currentScreen = "register"
+                NavHost(
+                    navController = navController,
+                    startDestination = Routes.LOGIN
+                ) {
+                    composable(Routes.LOGIN) {
+                        LoginScreen(
+                            onLoginSuccess = { navController.navigate(Routes.HOME) },
+                            onNavigateToRegister = { navController.navigate(Routes.REGISTER) }
+                        )
+                    }
+
+                    composable(Routes.REGISTER) {
+                        RegisterScreen(
+                            onRegisterSuccess = { navController.navigate(Routes.HOME) },
+                            onNavigateToLogin = { navController.navigate(Routes.LOGIN) }
+                        )
+                    }
+
+                    composable(Routes.HOME) {
+                        HomepageScreen(
+                            onNavigateProfile = { navController.navigate(Routes.PROFILE) },
+                            onNavigateFavorites = { navController.navigate(Routes.FAVORITES) },
+                            onRecipeDetails = { recipeId ->
+                                navController.navigate("details/$recipeId")
                             }
-                        )
-                        "register" -> RegisterScreen(
-                            onRegisterSuccess = {
-                                currentScreen = "home"
-                            },
-                            onNavigateToLogin = {
-                                currentScreen = "login"
-                            }
-                        )
-                        "profile" -> ProfileScreen(
-                            onNavigateHome = { currentScreen = "home" },
-                            onNavigateFavorites = {currentScreen = "favorites"},
-                            onAddClick = {currentScreen = "form"}
-                        )
-                        "home" -> HomepageScreen(
-                            onNavigateProfile = {currentScreen = "profile"},
-                            onNavigateFavorites = {currentScreen = "favorites"}
-                        )
-                        "favorites" -> FavoritesScreen(
-                            onNavigateProfile = {currentScreen = "profile"},
-                            onNavigateHome = { currentScreen = "home" },
-                        )
-                        "form" -> AddRecipeForm(
-                            onExitClick = {currentScreen = "profile"}
-                        )
-                        "details" -> RecipeDetailsScreen (
 
                         )
+                    }
+
+                    composable(Routes.PROFILE) {
+                        ProfileScreen(
+                            onNavigateHome = { navController.navigate(Routes.HOME) },
+                            onNavigateFavorites = { navController.navigate(Routes.FAVORITES) },
+                            onAddClick = { navController.navigate(Routes.FORM) },
+                            onEditClick = { recipeId ->
+                                navController.navigate("edit_recipe/$recipeId")
+                            }
+                        )
+                    }
+
+                    composable(Routes.FAVORITES) {
+                        FavoritesScreen(
+                            onNavigateHome = { navController.navigate(Routes.HOME) },
+                            onNavigateFavorites = { navController.navigate(Routes.FAVORITES) },
+                            onNavigateProfile = { navController.navigate(Routes.PROFILE) },
+                        )
+                    }
+
+                    composable(Routes.FORM) {
+                        AddRecipeForm(
+                            onNavigateHome = { navController.navigate(Routes.HOME) },
+                            onExitClick = { navController.navigate(Routes.PROFILE) }
+                        )
+                    }
+                    composable(
+                        route = "edit_recipe/{id}",
+                        arguments = listOf(navArgument("id") { type = NavType.IntType })
+                    ) { backStackEntry ->
+
+                        val id = backStackEntry.arguments?.getInt("id") ?: 0
+
+                        EditRecipeForm(
+                            recipeId = id,
+                            onExitClick = { navController.navigate(Routes.PROFILE) },
+                            onNavigateHome = { navController.navigate(Routes.HOME) },
+                            onNavigateFavorites = { navController.navigate(Routes.FAVORITES) },
+                            onNavigateProfile = { navController.navigate(Routes.PROFILE) }
+                        )
+                    }
+
+                    composable(
+                        route = "details/{recipeId}",
+                        arguments = listOf(
+                            navArgument("recipeId") { type = NavType.IntType }
+                        )
+                    ) { backStackEntry ->
+                        val id = backStackEntry.arguments?.getInt("recipeId") ?: return@composable
+                       RecipeDetailsScreen(
+                                recipeId = id,
+                        onBack = { navController.navigate(Routes.HOME) }
+                        )
+
                     }
                 }
             }
         }
+
+    }
     }
 
 @PreviewScreenSizes

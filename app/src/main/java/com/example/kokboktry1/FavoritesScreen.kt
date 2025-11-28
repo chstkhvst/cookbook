@@ -31,8 +31,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import vm.AddRecipeViewModel
 import vm.FavoritesViewModel
-
-
+import com.example.kokboktry1.ui.theme.Pink
+import com.example.kokboktry1.ui.theme.WhitePink
+import com.example.kokboktry1.ui.theme.BrightPink
+import com.example.kokboktry1.ui.theme.LightPink
 @Composable
 fun FavoritesScreen(
     onNavigateHome: () -> Unit = {},
@@ -41,11 +43,6 @@ fun FavoritesScreen(
     onNavigateProfile: () -> Unit = {},
     viewModel: FavoritesViewModel = viewModel()
 ) {
-    val Pink = Color(0xFFFF9FBA)
-    val WhitePink = Color(0xFFFFDFEC)
-    val BrightPink = Color(0xFFFF0090)
-    val LightPink = Color(0xFFFFC7DD)
-
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     Scaffold(

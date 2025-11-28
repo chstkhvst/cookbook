@@ -23,28 +23,28 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.kokboktry1.ui.theme.Kokboktry1Theme
+import vm.RecipeDetailViewModel
+import com.example.kokboktry1.ui.theme.Pink
+import com.example.kokboktry1.ui.theme.WhitePink
+import com.example.kokboktry1.ui.theme.BrightPink
+import com.example.kokboktry1.ui.theme.LightPink
+import coil.compose.AsyncImage
 
 @Composable
 fun RecipeDetailsScreen(
-    recipeName: String = "Рецепт",
-    servingsInitial: Int = 10,
-    ingredients: List<String> = listOf(
-        ""
-    ),
-    steps: List<Pair<String, Int?>> = listOf(
-        "" to R.drawable.ic_launcher_background
-    ),
+    recipeId: Int,
+    onBack: () -> Unit,
     onNavigateHome: () -> Unit = {},
     onNavigateSearch: () -> Unit = {},
     onNavigateFavorites: () -> Unit = {},
     onNavigateProfile: () -> Unit = {}
 ) {
-    var servings by remember { mutableStateOf(servingsInitial) }
+    val viewModel: RecipeDetailViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    val state by viewModel.state.collectAsState()
 
-    val Pink = Color(0xFFFF9FBA)
-    val WhitePink = Color(0xFFFFDFEC)
-    val BrightPink = Color(0xFFFF0090)
-    val LightPink = Color(0xFFFFC7DD)
+    LaunchedEffect(recipeId) {
+        viewModel.loadRecipe(recipeId)
+    }
 
     Scaffold(
         bottomBar = {
@@ -76,6 +76,7 @@ fun RecipeDetailsScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
             // Заголовок
             Text(
                 text = "cookbook",
@@ -89,14 +90,28 @@ fun RecipeDetailsScreen(
 
             // Название рецепта
             Text(
-                text = recipeName,
+                text = state.recipe?.name ?: "",
                 fontFamily = montserrat,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 26.sp,
                 color = BrightPink
             )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Button(
+                    onClick = onBack,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = BrightPink
+                    )
+                ) {
+                    Text("Назад")
+                }
+            }
 
             Spacer(Modifier.height(16.dp))
+
 
             // Фото рецепта
             Box(
@@ -107,34 +122,76 @@ fun RecipeDetailsScreen(
                     .background(Pink),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_background), ///////////
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.matchParentSize()
-                )
+                val imageUrl = state.recipe?.mainImagePath
+
+                if (imageUrl != null) {
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.matchParentSize()
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_launcher_background),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.matchParentSize()
+                    )
+                }
             }
 
             Spacer(Modifier.height(12.dp))
 
+
             // Количество порций
+
+            var servings by remember { mutableIntStateOf(1) }
+
+            LaunchedEffect(state.recipe?.portions) {
+                val newValue = state.recipe?.portions
+                if (newValue != null) servings = newValue
+            }
+
+            LaunchedEffect(servings) {
+                viewModel.updatePortions(servings)
+            }
+
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Порции:", color =BrightPink, fontFamily = montserrat, fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
+                Text(
+                    "Порции:",
+                    color = BrightPink,
+                    fontFamily = montserrat,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp
+                )
+
                 Spacer(Modifier.width(10.dp))
+
                 IconButton(onClick = { if (servings > 1) servings-- }) {
-                    Text("-", fontSize = 28.sp, color =BrightPink, fontWeight = FontWeight.SemiBold)
+                    Text("-", fontSize = 28.sp, color = BrightPink, fontWeight = FontWeight.SemiBold)
                 }
-                Text("$servings", fontSize = 18.sp, color = BrightPink, fontFamily = montserrat, fontWeight = FontWeight.SemiBold)
+
+                Text(
+                    "$servings",
+                    fontSize = 18.sp,
+                    color = BrightPink,
+                    fontFamily = montserrat,
+                    fontWeight = FontWeight.SemiBold
+                )
+
                 IconButton(onClick = { servings++ }) {
-                    Text("+", fontSize = 28.sp, color =BrightPink)
+                    Text("+", fontSize = 28.sp, color = BrightPink)
                 }
             }
 
             Spacer(Modifier.height(16.dp))
+
 
             // Ингредиенты
             Box(
@@ -144,6 +201,7 @@ fun RecipeDetailsScreen(
                     .padding(16.dp)
             ) {
                 Column {
+
                     Text(
                         "Ингредиенты",
                         color = BrightPink,
@@ -151,12 +209,16 @@ fun RecipeDetailsScreen(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 22.sp
                     )
+
                     Spacer(Modifier.height(8.dp))
-                    ingredients.forEach { ingredient ->
+
+                    val ingredients = state.recipe?.ingredients ?: emptyList()
+                    ingredients.forEach { ing ->
                         Text(
-                            "• $ingredient",
+                            "• ${ing.name}, ${ing.weight} гр.",
                             color = BrightPink,
                             fontFamily = montserrat,
+                            fontWeight = FontWeight.SemiBold,
                             fontSize = 16.sp
                         )
                     }
@@ -164,6 +226,7 @@ fun RecipeDetailsScreen(
             }
 
             Spacer(Modifier.height(16.dp))
+
 
             // Пошаговый рецепт
             Box(
@@ -173,6 +236,7 @@ fun RecipeDetailsScreen(
                     .padding(16.dp)
             ) {
                 Column {
+
                     Text(
                         "Пошаговый рецепт",
                         color = BrightPink,
@@ -180,20 +244,29 @@ fun RecipeDetailsScreen(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 22.sp
                     )
+
                     Spacer(Modifier.height(12.dp))
 
-                    steps.forEachIndexed { index, (step, imageRes) ->
+                    val steps = state.recipe?.steps ?: emptyList()
+
+                    steps.forEachIndexed { index, step ->
                         Column {
+
                             Text(
-                                "${index + 1}. $step",
+                                "${index + 1}. ${step.description}",
                                 color = BrightPink,
                                 fontFamily = montserrat,
+                                fontWeight = FontWeight.SemiBold,
                                 fontSize = 16.sp
                             )
+
                             Spacer(Modifier.height(8.dp))
-                            imageRes?.let {
-                                Image(
-                                    painter = painterResource(id = it),
+
+
+                            val stepImage = step.stepImagePath
+                            if (stepImage != null) {
+                                AsyncImage(
+                                    model = stepImage,
                                     contentDescription = null,
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier
@@ -201,15 +274,15 @@ fun RecipeDetailsScreen(
                                         .height(150.dp)
                                         .clip(RoundedCornerShape(15.dp))
                                 )
+
                                 Spacer(Modifier.height(12.dp))
                             }
                         }
                     }
                 }
             }
-
-            Spacer(Modifier.height(20.dp))
         }
+
     }
 }
 
@@ -217,6 +290,9 @@ fun RecipeDetailsScreen(
 @Composable
 fun RecipeDetailsScreenPreview() {
     Kokboktry1Theme {
-        RecipeDetailsScreen()
+        RecipeDetailsScreen(
+            recipeId = 1,
+            onBack = { }
+    )
     }
 }

@@ -1,32 +1,20 @@
 package vm
 
-import android.R
 import android.app.Application
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.myapp.api.models.CreateRecipeDTO
-import com.example.myapp.api.models.RecipeType
-import com.example.myapp.api.models.RecipeDifficulty
-import com.example.myapp.api.models.RecipeCuisine
+import com.example.myapp.api.models.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import android.util.Log
-import androidx.lifecycle.AndroidViewModel
-import com.example.myapp.api.models.IngredientDTO
-import com.example.myapp.api.models.StepDTO
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 
-data class IngredientInput(
-    val name: String = "",
-    val weight: Int? = null
-)
-data class StepInput(
-    val description: String = "",
-    val imagePath: String? = null
-)
-data class AddRecipeState(
+data class EditRecipeState(
+    val recipeId: Int = 0,
     val name: String = "",
     val portions: Int = 1,
     val cookingTime: Int = 0,
@@ -39,6 +27,7 @@ data class AddRecipeState(
     val types: List<RecipeType> = emptyList(),
     val difficulties: List<RecipeDifficulty> = emptyList(),
     val cuisines: List<RecipeCuisine> = emptyList(),
+
     val ingredients: List<IngredientInput> = emptyList(),
     val steps: List<StepInput> = emptyList(),
 
@@ -48,126 +37,152 @@ data class AddRecipeState(
     val error: String? = null
 )
 
-class AddRecipeViewModel(
-    private val app: Application
+class EditRecipeViewModel(
+    private val app: Application,
+    private val recipeId: Int
 ) : AndroidViewModel(app) {
 
     private val catalogApi = ApiProvider.catalogApi
     private val recipeApi = ApiProvider.recipeApi
 
-    private val _state = MutableStateFlow(AddRecipeState())
+    private val _state = MutableStateFlow(EditRecipeState(recipeId = recipeId))
     val state = _state.asStateFlow()
 
     init {
         loadCatalogs()
     }
-    private fun uriToBase64(uriString: String): String? {
-        return try {
-            val uri = android.net.Uri.parse(uriString)
-            // Определяем MIME-тип файла
-            val mime = app.contentResolver.getType(uri) ?: return null
-            val bytes = app.contentResolver.openInputStream(uri)?.use { it.readBytes() }
-                ?: return null
 
-            // в Base64
-            val b64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
-            // Собираем корректный формат
-            "data:$mime;base64,$b64"
-
-        } catch (e: Exception) {
-            Log.e("AddRecipeVM", "Base64 conversion failed", e)
-            null
-        }
-    }
-
-
-    // Загружаем типы, сложности, кухни
-    private fun loadCatalogs() {
+    fun loadRecipe(recipeId: Int) {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true, error = null)
 
             try {
-                val data = withContext(Dispatchers.IO) {
-
-                    val typesResp = try {
-                        catalogApi.recipetypesGet().execute()
-                    } catch (e: Exception) {
-                        Log.e("AddRecipeVM", "recipetypesGet failed", e)
-                        null
-                    }
-
-                    val diffResp = try {
-                        catalogApi.difficultiesGet().execute()
-                    } catch (e: Exception) {
-                        Log.e("AddRecipeVM", "difficultiesGet failed", e)
-                        null
-                    }
-
-                    val cuisinesResp = try {
-                        catalogApi.cuisinesGet().execute()
-                    } catch (e: Exception) {
-                        Log.e("AddRecipeVM", "cuisinesGet failed", e)
-                        null
-                    }
-
-                    Triple(
-                        typesResp?.body() ?: emptyList(),
-                        diffResp?.body() ?: emptyList(),
-                        cuisinesResp?.body() ?: emptyList()
-                    )
+                val recipe = withContext(Dispatchers.IO) {
+                    recipeApi.apiRecipeIdGet(recipeId).execute().body()
                 }
 
+                if (recipe == null) {
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        error = "Рецепт не найден"
+                    )
+                    return@launch
+                }
+
+                val ingredientsList = recipe.ingredients?.map {
+                    IngredientInput(
+                        name = it.name.orEmpty(),
+                        weight = it.weight
+                    )
+                } ?: emptyList()
+
+                val stepsList = recipe.steps?.map {
+                    StepInput(
+                        description = it.description.orEmpty(),
+                        imagePath = it.stepImagePath
+                    )
+                } ?: emptyList()
+
                 _state.value = _state.value.copy(
-                    types = data.first,
-                    difficulties = data.second,
-                    cuisines = data.third,
+                    name = recipe.name.orEmpty(),
+                    portions = recipe.portions ?: 1,
+                    cookingTime = recipe.cookingTime ?: 0,
+                    mainImagePath = recipe.mainImagePath,
+                    selectedType = recipe.recipeType,
+                    selectedDifficulty = recipe.difficulty,
+                    selectedCuisine = recipe.cuisine,
+                    ingredients = ingredientsList,
+                    steps = stepsList,
                     isLoading = false
                 )
 
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     isLoading = false,
+                    error = "Ошибка загрузки рецепта: ${e.message}"
+                )
+            }
+        }
+    }
+
+
+    private fun uriToBase64(uriString: String): String? {
+        return try {
+            val uri = android.net.Uri.parse(uriString)
+            val mime = app.contentResolver.getType(uri) ?: return null
+            val bytes = app.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                ?: return null
+
+            val b64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
+            "data:$mime;base64,$b64"
+
+        } catch (e: Exception) {
+            Log.e("EditRecipeVM", "Base64 conversion failed", e)
+            null
+        }
+    }
+
+    private fun loadCatalogs() {
+        viewModelScope.launch {
+            try {
+                val data = withContext(Dispatchers.IO) {
+                    Triple(
+                        catalogApi.recipetypesGet().execute().body() ?: emptyList(),
+                        catalogApi.difficultiesGet().execute().body() ?: emptyList(),
+                        catalogApi.cuisinesGet().execute().body() ?: emptyList()
+                    )
+                }
+
+                _state.value = _state.value.copy(
+                    types = data.first,
+                    difficulties = data.second,
+                    cuisines = data.third
+                )
+
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
                     error = "Ошибка загрузки каталогов: ${e.message}"
                 )
             }
         }
     }
-    private fun buildCreateRecipeDTO(): CreateRecipeDTO {
+
+    private fun buildUpdateDTO(): CreateRecipeDTO {
         val s = _state.value
 
-        val ingredientsDto = s.ingredients.map { ing ->
+        val ingredientsDto = s.ingredients.map {
             IngredientDTO(
-                name = ing.name,
-                weight = ing.weight
+                name = it.name,
+                weight = it.weight
             )
         }
 
-        val stepsDto = s.steps.map { st ->
+        val stepsDto = s.steps.map {
             StepDTO(
-                description = st.description,
-                stepImagePath = st.imagePath
+                description = it.description,
+                stepImagePath = it.imagePath
             )
         }
 
         return CreateRecipeDTO(
+            id = s.recipeId,
             name = s.name,
             portions = s.portions,
             cookingTime = s.cookingTime,
             typeId = s.selectedType?.id,
             difficultyId = s.selectedDifficulty?.id,
             cuisineId = s.selectedCuisine?.id,
-            userId = "",
+            userId = "", // сервер сам определит из токена
             ingredients = ingredientsDto,
             steps = stepsDto,
             mainImagePath = s.mainImagePath
         )
     }
 
-    // Отправка рецепта на бэк
-    fun sendRecipe() {
+    fun updateRecipe() {
         val s = _state.value
         if (s.isSending) return
-        // проверка
+
         if (s.name.isBlank()
             || s.selectedType == null
             || s.selectedDifficulty == null
@@ -183,18 +198,17 @@ class AddRecipeViewModel(
             _state.value = s.copy(error = "Заполните корректно обязательные поля")
             return
         }
+
         _state.value = s.copy(isSending = true, error = null)
-        val model = buildCreateRecipeDTO()
+        val dto = buildUpdateDTO()
 
         viewModelScope.launch {
-            _state.value = _state.value.copy(isSending = true, error = null)
-
             try {
-                val result = withContext(Dispatchers.IO) {
-                    recipeApi.apiRecipePost(model).execute()
+                val response = withContext(Dispatchers.IO) {
+                    recipeApi.apiRecipeIdPut(recipeId, dto).execute()
                 }
 
-                if (result.isSuccessful) {
+                if (response.isSuccessful) {
                     _state.value = _state.value.copy(
                         isSending = false,
                         success = true
@@ -202,7 +216,7 @@ class AddRecipeViewModel(
                 } else {
                     _state.value = _state.value.copy(
                         isSending = false,
-                        error = "Ошибка сохранения: ${result.code()} ${result.message()}"
+                        error = "Ошибка обновления: ${response.code()} ${response.message()}"
                     )
                 }
 
@@ -218,12 +232,14 @@ class AddRecipeViewModel(
     fun clearError() {
         _state.value = _state.value.copy(error = null)
     }
+
     fun addIngredient() {
         val s = _state.value
         _state.value = s.copy(
             ingredients = s.ingredients + IngredientInput()
         )
     }
+
     fun addStep() {
         val s = _state.value
         _state.value = s.copy(
@@ -231,68 +247,60 @@ class AddRecipeViewModel(
         )
     }
 
-    fun updateIngredientName(index: Int, newName: String) {
+    fun updateIngredientName(i: Int, v: String) {
         val s = _state.value
-        if (index !in s.ingredients.indices) return
-
-        val updated = s.ingredients.toMutableList()
-        updated[index] = updated[index].copy(name = newName)
-
-        _state.value = s.copy(ingredients = updated)
+        if (i !in s.ingredients.indices) return
+        val u = s.ingredients.toMutableList()
+        u[i] = u[i].copy(name = v)
+        _state.value = s.copy(ingredients = u)
     }
 
-    fun updateIngredientWeight(index: Int, newWeight: Int?) {
+    fun updateIngredientWeight(i: Int, w: Int?) {
         val s = _state.value
-        if (index !in s.ingredients.indices) return
-
-        val updated = s.ingredients.toMutableList()
-        updated[index] = updated[index].copy(weight = newWeight)
-
-        _state.value = s.copy(ingredients = updated)
+        if (i !in s.ingredients.indices) return
+        val u = s.ingredients.toMutableList()
+        u[i] = u[i].copy(weight = w)
+        _state.value = s.copy(ingredients = u)
     }
-    fun updateStepDescription(index: Int, text: String) {
+
+    fun updateStepDescription(i: Int, v: String) {
         val s = _state.value
-        if (index !in s.steps.indices) return
-
-        val updated = s.steps.toMutableList()
-        updated[index] = updated[index].copy(description = text)
-
-        _state.value = s.copy(steps = updated)
+        if (i !in s.steps.indices) return
+        val u = s.steps.toMutableList()
+        u[i] = u[i].copy(description = v)
+        _state.value = s.copy(steps = u)
     }
-    fun updateStepImage(index: Int, uri: String) {
-        val base64 = uriToBase64(uri)
+
+    fun updateStepImage(i: Int, uri: String) {
+        val b64 = uriToBase64(uri)
         val s = _state.value
-        if (index !in s.steps.indices) return
-
-        val updated = s.steps.toMutableList()
-        updated[index] = updated[index].copy(imagePath = base64)
-
-        _state.value = s.copy(steps = updated)
+        if (i !in s.steps.indices) return
+        val u = s.steps.toMutableList()
+        u[i] = u[i].copy(imagePath = b64)
+        _state.value = s.copy(steps = u)
     }
+
     fun updateMainImage(uri: String) {
-        val base64 = uriToBase64(uri)
-        _state.value = _state.value.copy(mainImagePath = base64)
+        val b64 = uriToBase64(uri)
+        _state.value = _state.value.copy(mainImagePath = b64)
     }
 
-    fun removeStep(index: Int) {
+    fun removeStep(i: Int) {
         val s = _state.value
-        if (index !in s.steps.indices) return
-
-        val updated = s.steps.toMutableList()
-        updated.removeAt(index)
-
-        _state.value = s.copy(steps = updated)
+        if (i !in s.steps.indices) return
+        val u = s.steps.toMutableList()
+        u.removeAt(i)
+        _state.value = s.copy(steps = u)
     }
 
-    fun removeIngredient(index: Int) {
+    fun removeIngredient(i: Int) {
         val s = _state.value
-        if (index !in s.ingredients.indices) return
-
-        val updated = s.ingredients.toMutableList()
-        updated.removeAt(index)
-
-        _state.value = s.copy(ingredients = updated)
+        if (i !in s.ingredients.indices) return
+        val u = s.ingredients.toMutableList()
+        u.removeAt(i)
+        _state.value = s.copy(ingredients = u)
     }
+
     fun updateName(newName: String) {
         _state.value = _state.value.copy(name = newName)
     }
@@ -316,4 +324,16 @@ class AddRecipeViewModel(
         _state.value = _state.value.copy(selectedCuisine = cuisine)
     }
 
+}
+class EditRecipeViewModelFactory(
+    private val app: Application,
+    private val recipeId: Int
+) : ViewModelProvider.Factory {
+
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(EditRecipeViewModel::class.java)) {
+            return EditRecipeViewModel(app, recipeId) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
 }

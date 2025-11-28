@@ -35,8 +35,10 @@ import com.example.myapp.api.models.RecipeDTO
 import com.example.myapp.api.models.RecipeDifficulty
 import com.example.myapp.api.models.RecipeType
 import com.example.myapp.api.models.RecipeCuisine
-
-
+import com.example.kokboktry1.ui.theme.Pink
+import com.example.kokboktry1.ui.theme.WhitePink
+import com.example.kokboktry1.ui.theme.BrightPink
+import com.example.kokboktry1.ui.theme.LightPink
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun HomepageScreen(
@@ -44,16 +46,12 @@ fun HomepageScreen(
     onNavigateSearch: () -> Unit = {},
     onNavigateFavorites: () -> Unit = {},
     onNavigateProfile: () -> Unit = {},
-    onRecipeDetails: () -> Unit = {},
+    onRecipeDetails: (Int) -> Unit = {},
+
     onToggleFavorite: () -> Unit = {},
     viewModel: HomepageViewModel = viewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-
-    val Pink = Color(0xFFFF9FBA)
-    val WhitePink = Color(0xFFFFDFEC)
-    val BrightPink = Color(0xFFFF0090)
-    val LightPink = Color(0xFFFFC7DD)
 
     var searchText by remember { mutableStateOf("") }
 
@@ -149,12 +147,12 @@ fun HomepageScreen(
             HorizontalScrollableRow(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                FilterButton("сначала новые")
-                FilterButton("сначала старые")
-                FilterButton("до 7 ингредиентов")
-                FilterButton("до 10 ингредиентов")
-                FilterButton("до 30 мин")
-                FilterButton("< 1 часа")
+                FilterButton("сначала новые")       { viewModel.toggleFilter(it) }
+                FilterButton("сначала старые")      { viewModel.toggleFilter(it) }
+                FilterButton("до 7 ингредиентов")   { viewModel.toggleFilter(it) }
+                FilterButton("до 10 ингредиентов")  { viewModel.toggleFilter(it) }
+                FilterButton("до 30 мин")           { viewModel.toggleFilter(it) }
+                FilterButton("< 1 часа")            { viewModel.toggleFilter(it) }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -222,13 +220,13 @@ fun HomepageScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Button(
-                                onClick = onRecipeDetails,
+                                onClick = { onRecipeDetails(recipe.id ?: return@Button) },
                                 shape = RoundedCornerShape(20.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = com.example.kokboktry1.Pink)
+                                colors = ButtonDefaults.buttonColors(containerColor = Pink)
                             ) {
                                 Text(
                                     "Подробнее",
-                                    color = com.example.kokboktry1.BrightPink,
+                                    color = BrightPink,
                                     fontFamily = FontFamily(Font(R.font.montserrat)),
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 12.sp
@@ -239,7 +237,7 @@ fun HomepageScreen(
                                 Icon(
                                     imageVector = Icons.Default.Favorite,
                                     contentDescription = "Избранное",
-                                    tint = com.example.kokboktry1.BrightPink
+                                    tint = BrightPink
                                 )
                             }
                         }
@@ -265,69 +263,6 @@ fun HorizontalScrollableRow(
         content()
     }
 }
-
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun ComboBoxPlaceholder(label: String) {
-//    var expanded by remember { mutableStateOf(false) }
-//    var selectedText by remember { mutableStateOf("") }
-//    val options = listOf("Вариант 1", "Вариант 2", "Вариант 3") // варианты выбора
-//
-//    ExposedDropdownMenuBox(
-//        expanded = expanded,
-//        onExpandedChange = { expanded = !expanded }
-//    ) {
-//        OutlinedTextField(
-//            value = selectedText,
-//            onValueChange = {},
-//            label = {
-//                Text(
-//                    label,
-//                    color = BrightPink,
-//                    fontSize = 12.sp
-//                )
-//            },
-//            trailingIcon = {
-//                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-//            },
-//            modifier = Modifier
-////                .width()
-//                .menuAnchor(), //  связывает поле с меню
-//            readOnly = true, //  только чтение
-//            colors = TextFieldDefaults.colors(
-//                focusedContainerColor = Pink,
-//                unfocusedContainerColor = Pink,
-//                focusedTextColor = BrightPink,
-//                unfocusedTextColor = BrightPink,
-//                unfocusedIndicatorColor = Color.Transparent,
-//                focusedIndicatorColor = Color.Transparent,
-//            ),
-//            shape = RoundedCornerShape(30.dp)
-//        )
-//
-//        //menu
-//        ExposedDropdownMenu(
-//            expanded = expanded,
-//            onDismissRequest = { expanded = false }
-//        ) {
-//            options.forEach { option ->
-//                DropdownMenuItem(
-//                    text = {
-//                        Text(
-//                            option,
-//                            fontSize = 12.sp,
-//                            color = BrightPink
-//                        )
-//                    },
-//                    onClick = {
-//                        selectedText = option
-//                        expanded = false //закрываем меню
-//                    }
-//                )
-//            }
-//        }
-//    }
-//}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeTypeComboBox(
@@ -457,18 +392,20 @@ fun RecipeCuisineComboBox(
     }
 }
 @Composable
-fun FilterButton(text: String) {
+fun FilterButton(    label: String,
+                     onClick: (String) -> Unit) {
     var isPressed by remember { mutableStateOf(false) }
 
     Button(
-        onClick = { isPressed = !isPressed },
+        onClick = { isPressed = !isPressed
+            onClick(label) },
         shape = RoundedCornerShape(50),
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isPressed) Pink else WhitePink
         )
     ) {
         Text(
-            text,
+            label,
             color =  BrightPink,
             fontFamily = FontFamily(Font(R.font.montserrat)),
             fontWeight = FontWeight.SemiBold,

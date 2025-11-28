@@ -29,11 +29,16 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.ui.layout.ContentScale
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import vm.ProfileViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import com.example.kokboktry1.ui.theme.Pink
+import com.example.kokboktry1.ui.theme.WhitePink
+import com.example.kokboktry1.ui.theme.BrightPink
+import com.example.kokboktry1.ui.theme.LightPink
 import vm.ProfileState
-
 @Composable
 fun ProfileScreen(
     onNavigateHome: () -> Unit = {},
@@ -41,15 +46,9 @@ fun ProfileScreen(
     onNavigateFavorites: () -> Unit = {},
     onNavigateProfile: () -> Unit = {},
     onAddClick: () -> Unit = {},
+    onEditClick: (Int) -> Unit = {},
     viewModel: ProfileViewModel = viewModel()
-
 ) {
-
-    val Pink = Color(0xFFFF9FBA)
-    val WhitePink = Color(0xFFFFDFEC)
-    val BrightPink = Color(0xFFFF0090)
-    val LightPink = Color(0xFFFFC7DD)
-
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     Scaffold(
@@ -73,17 +72,17 @@ fun ProfileScreen(
             }
         },
         contentWindowInsets = WindowInsets(0)
-    ){ innerPadding ->
+    ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(LightPink)
         ) {
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(LightPink)
                     .verticalScroll(rememberScrollState())
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -106,14 +105,16 @@ fun ProfileScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_launcher_background), // заменишь на свою иконку
-                        contentDescription = "Профиль",
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "Аватар",
                         tint = BrightPink,
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(40.dp)
                             .clip(CircleShape)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
                     Text(
                         text = state.userName,
                         fontSize = 18.sp,
@@ -123,13 +124,11 @@ fun ProfileScreen(
                     )
                 }
 
+
                 Spacer(modifier = Modifier.height(16.dp))
 
-                //добавление
                 Button(
-                    onClick = { onAddClick()
-                        viewModel.addRecipe()
-                              },
+                    onClick = onAddClick,
                     modifier = Modifier
                         .fillMaxWidth(0.9f)
                         .height(45.dp),
@@ -158,90 +157,10 @@ fun ProfileScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Блок рецепта
-//                Box(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .background(Color(0xFFFFDFEC), RoundedCornerShape(20.dp))
-//                        .padding(12.dp)
-//                ) {
-//                    Row(verticalAlignment = Alignment.CenterVertically) {
-//                        Box(
-//                            modifier = Modifier
-//                                .size(100.dp, 70.dp)
-//                                .background(Color.LightGray, RoundedCornerShape(10.dp))
-//                        ) {
-//                            Text(
-//                                text = "Фото",
-//                                modifier = Modifier.align(Alignment.Center),
-//                                color = Color.DarkGray
-//                            )
-//                        }
-//
-//                        Spacer(modifier = Modifier.width(10.dp))
-//
-//                        Column(modifier = Modifier.weight(1f)) {
-//                            Text(
-//                                text = "Эклеры",
-//                                fontSize = 20.sp,
-//                                fontWeight = FontWeight.Bold,
-//                                color = Color(0xFFFF0090),
-//                                fontFamily = FontFamily(Font(R.font.montserrat))
-//                            )
-//                            Text(
-//                                text = "Категория: десерт",
-//                                fontSize = 14.sp,
-//                                fontWeight = FontWeight.SemiBold,
-//                                color = Color(0xFFFF0090),
-//                                fontFamily = FontFamily(Font(R.font.montserrat))
-//                            )
-//                            Text(
-//                                text = "Сложность: 5★",
-//                                fontSize = 14.sp,
-//                                fontWeight = FontWeight.SemiBold,
-//                                color = Color(0xFFFF0090),
-//                                fontFamily = FontFamily(Font(R.font.montserrat))
-//                            )
-//                            Text(
-//                                text = "Кухня: французская",
-//                                fontSize = 14.sp,
-//                                fontWeight = FontWeight.SemiBold,
-//                                color = Color(0xFFFF0090),
-//                                fontFamily = FontFamily(Font(R.font.montserrat))
-//                            )
-//                            Text(
-//                                text = "Количество порций: 10",
-//                                fontSize = 14.sp,
-//                                fontWeight = FontWeight.SemiBold,
-//                                color = Color(0xFFFF0090),
-//                                fontFamily = FontFamily(Font(R.font.montserrat))
-//                            )
-//                        }
-//
-//                        Column(
-//                            horizontalAlignment = Alignment.CenterHorizontally,
-//                            verticalArrangement = Arrangement.SpaceBetween
-//                        ) {
-//                            IconButton(onClick = { viewModel.editRecipe() }) {
-//                                Icon(
-//                                    imageVector = Icons.Default.Edit,
-//                                    contentDescription = "Изменить",
-//                                    tint = Color(0xFFFF0090)
-//                                )
-//                            }
-//                            IconButton(onClick = { viewModel.deleteRecipe("") }) {
-//                                Icon(
-//                                    imageVector = Icons.Default.Delete,
-//                                    contentDescription = "Удалить",
-//                                    tint = Color(0xFFFF0090)
-//                                )
-//                            }
-//                        }
-//                    }
-//                }
-                //рецепт
-                state.userRecipes.forEach { recipeName ->
+                // СПИСОК РЕЦЕПТОв
+                state.userRecipes.forEach { recipe ->
                     Spacer(modifier = Modifier.height(12.dp))
+
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -249,55 +168,46 @@ fun ProfileScreen(
                             .padding(12.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
+
+                            AsyncImage(
+                                model = recipe.mainImagePath,
+                                contentDescription = "Фото",
                                 modifier = Modifier
                                     .size(100.dp, 70.dp)
-                                    .background(Color.LightGray, RoundedCornerShape(10.dp))
-                            ) {
-                                Text(
-                                    text = "Фото",
-                                    modifier = Modifier.align(Alignment.Center),
-                                    color = Color.DarkGray
-                                )
-                            }
+                                    .clip(RoundedCornerShape(10.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+
 
                             Spacer(modifier = Modifier.width(10.dp))
 
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = recipeName,
+                                    text = recipe.name ?: "Без названия",
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = BrightPink,
                                     fontFamily = FontFamily(Font(R.font.montserrat))
                                 )
                                 Text(
-                                    text = "Категория: десерт",
+                                    text = "Категория: ${recipe.recipeType?.typeName ?: "-"}",
                                     fontSize = 14.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = BrightPink,
-                                    fontFamily = FontFamily(Font(R.font.montserrat))
+                                    color = BrightPink
                                 )
                                 Text(
-                                    text = "Сложность: 5★",
+                                    text = "Сложность: ${recipe.difficulty?.difficultyName ?: "-"}",
                                     fontSize = 14.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = BrightPink,
-                                    fontFamily = FontFamily(Font(R.font.montserrat))
+                                    color = BrightPink
                                 )
                                 Text(
-                                    text = "Кухня: французская",
+                                    text = "Кухня: ${recipe.cuisine?.cuisineName ?: "-"}",
                                     fontSize = 14.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = BrightPink,
-                                    fontFamily = FontFamily(Font(R.font.montserrat))
+                                    color = BrightPink
                                 )
                                 Text(
-                                    text = "Количество порций: 10",
+                                    text = "Порции: ${recipe.portions ?: "-"}",
                                     fontSize = 14.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color =BrightPink,
-                                    fontFamily = FontFamily(Font(R.font.montserrat))
+                                    color = BrightPink
                                 )
                             }
 
@@ -305,14 +215,16 @@ fun ProfileScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.SpaceBetween
                             ) {
-                                IconButton(onClick = { viewModel.editRecipe() }) {
+                                IconButton(onClick = {
+                                    recipe.id?.let { onEditClick(it) }
+                                }) {
                                     Icon(
                                         imageVector = Icons.Default.Edit,
                                         contentDescription = "Изменить",
                                         tint = BrightPink
                                     )
                                 }
-                                IconButton(onClick = { viewModel.deleteRecipe(recipeName) }) {
+                                IconButton(onClick = { recipe.id?.let { viewModel.deleteRecipe(it) } }) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
                                         contentDescription = "Удалить",
@@ -323,12 +235,10 @@ fun ProfileScreen(
                         }
                     }
                 }
-
+            }
         }
     }
-
-    }
-    }
+}
 
 @Preview(showBackground = true)
 @Composable

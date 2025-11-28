@@ -14,7 +14,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kokboktry1.ui.theme.Kokboktry1Theme
+import vm.LoginViewModel
 
 
 @Composable
@@ -23,13 +25,15 @@ fun LoginScreen(
     onNavigateToRegister: () -> Unit = {}     //Колбэк для перехода к регистрации
 ) {
     val Pink = Color(0xFFFF9FBA)
-    val WhitePink = Color(0xFFFFDFEC)
     val BrightPink = Color(0xFFFF0090)
     val LightPink = Color(0xFFFFC7DD)
 
     // Состояния для текстовых полей
     var login by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+    val viewModel: LoginViewModel = viewModel()
+    val state by viewModel.state.collectAsState()
 
 
     Column(
@@ -112,9 +116,7 @@ fun LoginScreen(
 
         Button(
             onClick = {
-                if (login.isNotEmpty() && password.isNotEmpty()) {
-                    onLoginSuccess()
-                }
+                viewModel.login(login, password)
             },
             modifier = Modifier.width(280.dp),
             colors = ButtonDefaults.buttonColors(
@@ -128,6 +130,9 @@ fun LoginScreen(
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
             )
+        }
+        LaunchedEffect(state.success) {
+            if (state.success) onLoginSuccess()
         }
 
         // КНОПКА ПЕРЕХОДА К РЕГИСТРАЦИИ
